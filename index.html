@@ -111,6 +111,15 @@
         }
         .option:hover { background: #e2edf7; }
         input[type="radio"] { accent-color: #1f6392; width: 18px; height: 18px; }
+        .hand-input {
+            width: 180px;
+            padding: 8px 12px;
+            border-radius: 20px;
+            border: 1px solid #cbd5e1;
+            font-size: 0.9rem;
+            margin-top: 8px;
+            font-family: monospace;
+        }
         .feedback { font-size: 0.85rem; margin-top: 10px; padding: 6px 12px; border-radius: 18px; display: inline-block; }
         .correct-fb { background: #dff0e5; color: #136b47; }
         .wrong-fb { background: #ffe6e5; color: #b13e3e; }
@@ -138,256 +147,341 @@
         @media (max-width: 700px) {
             .container { padding: 16px; }
             .options { flex-direction: column; gap: 8px; }
+            .hand-input { width: 100%; }
         }
         mjx-container { display: inline-flex !important; vertical-align: baseline !important; }
+        hr { margin: 20px 0; }
+        .hand-section-title { color: #155a7c; font-size: 1.3rem; margin: 20px 0 10px 0; border-left: 3px solid #2c7da0; padding-left: 15px; }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>📊 STAT 353: Engineering Statistics</h1>
-    <div class="sub">Complete chapters 2-14 | Fully described summaries | 10 unique quiz questions per chapter (130 total)<br>Mathematical expressions rendered with LaTeX (MathJax) for easy reading.</div>
+    <div class="sub">Complete chapters 2-14 | Fully described summaries | 10 unique multiple-choice + 5 real-world hand calculation questions per chapter</div>
     <div class="chapter-nav" id="nav-buttons"></div>
     <div id="panels-container"></div>
-    <footer>✅ Every question is self-contained with full definitions. All math uses LaTeX notation.</footer>
+    <footer>✅ All 13 chapters have 10 unique MC questions (no placeholders) + 5 original hand calculation questions based on real-world scenarios.</footer>
 </div>
 
 <script>
     // ============================================================
-    // COMPLETE CHAPTER DATA WITH LaTeX MATH (Chapters 2-14)
+    // CHAPTER SUMMARIES (Chapters 2-14) - UNCHANGED
     // ============================================================
     const chaptersData = {
-        2: { title: "Probability", summary: "Core Topics: Random experiments, sample space \\(S\\), events, counting techniques: permutations \\( _nP_r = \\frac{n!}{(n-r)!} \\), combinations \\( \\binom{n}{r} = \\frac{n!}{r!(n-r)!} \\). Probability axioms: \\(0 \\le P(A) \\le 1\\), \\(P(S)=1\\), \\(P(A \\cup B)=P(A)+P(B)\\) for disjoint \\(A,B\\). Conditional probability: \\(P(A|B)=\\frac{P(A \\cap B)}{P(B)}\\) for \\(P(B)>0\\). Law of Total Probability: \\(P(A)=\\sum_i P(A|B_i)P(B_i)\\) for partition \\(\\{B_i\\}\\). Bayes' Theorem: \\(P(B_i|A)=\\frac{P(A|B_i)P(B_i)}{\\sum_j P(A|B_j)P(B_j)}\\). Independence: \\(P(A \\cap B)=P(A)P(B)\\).", quiz: [] },
-        3: { title: "Discrete Random Variables", summary: "Random variable \\(X\\): function from sample space to \\(\\mathbb{R}\\). PMF \\(p(x)=P(X=x)\\). CDF \\(F(x)=P(X \\le x)\\). Mean \\(\\mu = E[X] = \\sum x p(x)\\). Variance \\(\\sigma^2 = \\text{Var}(X) = \\sum (x-\\mu)^2 p(x) = E[X^2]-(E[X])^2\\). Binomial: \\(X = \\#\\text{successes in } n \\text{ trials}\\), success prob \\(p\\). PMF: \\(P(X=x)=\\binom{n}{x}p^x(1-p)^{n-x}\\), mean \\(np\\), variance \\(np(1-p)\\). Poisson: \\(X = \\#\\text{rare events in fixed interval}\\), rate \\(\\lambda>0\\). PMF: \\(P(X=x)=e^{-\\lambda}\\lambda^x/x!\\), mean \\(=\\lambda\\), var \\(=\\lambda\\). Geometric: \\(X = \\#\\text{trials until FIRST success}\\). PMF: \\(P(X=x)=(1-p)^{x-1}p\\), mean \\(1/p\\), var \\((1-p)/p^2\\). Negative Binomial: \\(X = \\#\\text{trials until } r \\text{ successes}\\). PMF: \\(P(X=x)=\\binom{x-1}{r-1}p^r(1-p)^{x-r}\\).", quiz: [] },
-        4: { title: "Continuous Random Variables", summary: "PDF \\(f(x) \\ge 0\\) with \\(\\int_{-\\infty}^{\\infty} f(x)dx = 1\\). \\(P(a<X<b)=\\int_a^b f(x)dx\\). CDF \\(F(x)=\\int_{-\\infty}^x f(t)dt\\). Mean \\(\\mu = \\int x f(x)dx\\). Variance \\(\\sigma^2 = \\int (x-\\mu)^2 f(x)dx\\). Normal \\(X \\sim N(\\mu,\\sigma^2)\\): \\(f(x)=\\frac{1}{\\sigma\\sqrt{2\\pi}} e^{-(x-\\mu)^2/(2\\sigma^2)}\\). Standardized \\(Z = (X-\\mu)/\\sigma \\sim N(0,1)\\). Exponential \\(X \\sim \\text{Exp}(\\lambda)\\): \\(f(x)=\\lambda e^{-\\lambda x} (x\\ge0)\\), mean \\(1/\\lambda\\), memoryless property. Uniform \\(X \\sim \\text{Uniform}(a,b)\\): \\(f(x)=1/(b-a)\\), mean \\((a+b)/2\\), var \\((b-a)^2/12\\). t-distribution: symmetric, heavier tails, used when \\(\\sigma\\) unknown. Reliability: \\(R(t)=P(T>t)=1-F(t)\\). Hazard rate \\(h(t)=f(t)/R(t)\\).", quiz: [] },
-        5: { title: "Joint Probability Distributions", summary: "Joint PMF for discrete: \\(f(x,y)=P(X=x, Y=y)\\). Marginal PMFs: \\(f_X(x)=\\sum_y f(x,y)\\), \\(f_Y(y)=\\sum_x f(x,y)\\). Conditional: \\(f(y|x)=f(x,y)/f_X(x)\\). Independence: \\(f(x,y)=f_X(x)f_Y(y)\\) for all \\(x,y\\). Covariance: \\(\\text{Cov}(X,Y)=E[(X-\\mu_X)(Y-\\mu_Y)]=E[XY]-E[X]E[Y]\\). Correlation: \\(\\rho = \\frac{\\text{Cov}(X,Y)}{\\sigma_X \\sigma_Y}\\), \\(-1\\le \\rho \\le 1\\), unitless. Linear combinations: \\(E[aX+bY]=aE[X]+bE[Y]\\). \\(\\text{Var}(aX+bY)=a^2\\text{Var}(X)+b^2\\text{Var}(Y)+2ab\\,\\text{Cov}(X,Y)\\). If independent, \\(\\text{Cov}=0\\) and \\(\\text{Var}(X+Y)=\\text{Var}(X)+\\text{Var}(Y)\\).", quiz: [] },
-        6: { title: "Descriptive Statistics & R", summary: "Sample mean \\(\\bar{x} = \\frac{1}{n}\\sum_{i=1}^n x_i\\). Sample variance \\(s^2 = \\frac{\\sum (x_i - \\bar{x})^2}{n-1}\\) (unbiased). Sample SD \\(s = \\sqrt{s^2}\\). Median: middle value. Quartiles \\(Q_1\\) (25th), \\(Q_3\\) (75th). IQR \\(= Q_3-Q_1\\). Five-number summary: min, \\(Q_1\\), median, \\(Q_3\\), max. Graphs: histogram, boxplot, scatterplot, time series plot. Sample correlation \\(r = \\frac{\\sum (x_i-\\bar{x})(y_i-\\bar{y})}{\\sqrt{\\sum (x_i-\\bar{x})^2}\\sqrt{\\sum (y_i-\\bar{y})^2}}\\), \\(-1\\le r\\le 1\\). R functions: mean(), var(), sd(), median(), quantile(), hist(), boxplot(), plot(), cor().", quiz: [] },
-        7: { title: "Point Estimation & Sampling Distributions", summary: "Parameter: population characteristic (\\(\\mu, p, \\sigma^2\\)). Statistic: sample-based estimate (\\(\\bar{x}, \\hat{p}, s^2\\)). Sampling distribution: distribution of a statistic over all possible samples. Unbiased estimator: \\(E[\\text{estimator}] = \\text{parameter}\\). CLT: For large \\(n\\), \\(\\bar{x} \\sim N(\\mu, \\sigma/\\sqrt{n})\\) approximately, regardless of population distribution. Standard error of \\(\\bar{x}\\): \\(\\text{SE} = \\sigma/\\sqrt{n}\\) (estimated by \\(s/\\sqrt{n}\\)). Standard error of \\(\\hat{p}\\): \\(\\text{SE} = \\sqrt{p(1-p)/n}\\) (estimated by \\(\\sqrt{\\hat{p}(1-\\hat{p})/n}\\)). Sample proportion \\(\\hat{p} = X/n\\). For \\(\\hat{p}\\), mean \\(=p\\), variance \\(=p(1-p)/n\\).", quiz: [] },
-        8: { title: "Confidence Intervals (Single Sample)", summary: "Confidence level \\((1-\\alpha)100\\%\\): proportion of intervals that contain true parameter. CI for \\(\\mu\\) (\\(\\sigma\\) known): \\(\\bar{x} \\pm z_{\\alpha/2} \\cdot \\frac{\\sigma}{\\sqrt{n}}\\), where \\(z_{\\alpha/2}\\) is standard normal critical value (\\(z_{0.025}=1.96\\) for 95%). CI for \\(\\mu\\) (\\(\\sigma\\) unknown): \\(\\bar{x} \\pm t_{\\alpha/2, n-1} \\cdot \\frac{s}{\\sqrt{n}}\\), \\(t\\)-distribution with \\(n-1\\) df. CI for proportion \\(p\\): \\(\\hat{p} \\pm z_{\\alpha/2} \\sqrt{\\frac{\\hat{p}(1-\\hat{p})}{n}}\\), requires \\(n\\hat{p}\\ge 5\\) and \\(n(1-\\hat{p})\\ge 5\\). Margin of error = critical value \\(\\times\\) standard error.", quiz: [] },
-        9: { title: "Hypothesis Testing (Single Sample)", summary: "\\(H_0\\) (null): statement about parameter (e.g., \\(\\mu = \\mu_0\\)). \\(H_a\\) (alternative): \\(\\mu < \\mu_0\\), \\(\\mu > \\mu_0\\), or \\(\\mu \\neq \\mu_0\\). Test statistic: measures evidence against \\(H_0\\). p-value = \\(P(\\text{data or more extreme} \\mid H_0)\\). Reject \\(H_0\\) if p-value \\(\\le \\alpha\\). Type I error: reject true \\(H_0\\) (prob \\(\\alpha\\)). Type II error: fail reject false \\(H_0\\) (prob \\(\\beta\\)). Power \\(= 1-\\beta\\). z-test (\\(\\sigma\\) known): \\(z_0 = \\frac{\\bar{x} - \\mu_0}{\\sigma/\\sqrt{n}}\\). t-test (\\(\\sigma\\) unknown): \\(t_0 = \\frac{\\bar{x} - \\mu_0}{s/\\sqrt{n}}\\), df \\(= n-1\\). Goodness-of-fit (\\(\\chi^2\\)): \\(H_0: p_1=p_{10},...,p_k=p_{k0}\\). Test stat \\(\\chi^2 = \\sum \\frac{(O_i-E_i)^2}{E_i}\\), df \\(= k-1\\).", quiz: [] },
-        10: { title: "Two-Sample Inference", summary: "Independent samples: \\(\\bar{x}_1, \\bar{x}_2, s_1, s_2, n_1, n_2\\). Two-sample t-test (Welch, unequal variances): \\(t_0 = \\frac{\\bar{x}_1 - \\bar{x}_2}{\\sqrt{s_1^2/n_1 + s_2^2/n_2}}\\), df by Welch-Satterthwaite. Paired t-test: differences \\(d_i = x_i - y_i\\), then one-sample t-test on \\(d_i\\): \\(t_0 = \\frac{\\bar{d}}{s_d/\\sqrt{n}}\\), df \\(= n-1\\). Two-proportion z-test: \\(H_0: p_1 = p_2\\). Pooled proportion \\(\\hat{p} = \\frac{x_1+x_2}{n_1+n_2}\\). Test stat \\(z_0 = \\frac{\\hat{p}_1 - \\hat{p}_2}{\\sqrt{\\hat{p}(1-\\hat{p})(1/n_1+1/n_2)}}\\).", quiz: [] },
-        11: { title: "Simple Linear Regression & Correlation", summary: "Model: \\(y = \\beta_0 + \\beta_1 x + \\varepsilon\\), where \\(\\varepsilon \\sim N(0,\\sigma^2)\\). \\(\\beta_0\\) = intercept, \\(\\beta_1\\) = slope. Least squares estimates: \\(\\hat{\\beta}_1 = \\frac{\\sum (x_i-\\bar{x})(y_i-\\bar{y})}{\\sum (x_i-\\bar{x})^2}\\), \\(\\hat{\\beta}_0 = \\bar{y} - \\hat{\\beta}_1\\bar{x}\\). Test \\(H_0: \\beta_1 = 0\\): \\(t = \\frac{\\hat{\\beta}_1}{\\text{SE}(\\hat{\\beta}_1)} \\sim t_{n-2}\\). \\(R^2 = 1 - \\frac{\\text{SSE}}{\\text{SST}}\\), proportion of variance explained. Pearson correlation \\(r\\), \\(r^2 = R^2\\). Assumptions (LINE): Linearity, Independence, Normality, Equal variance.", quiz: [] },
-        12: { title: "Multiple Linear Regression", summary: "Model: \\(y = \\beta_0 + \\beta_1 x_1 + \\dots + \\beta_k x_k + \\varepsilon\\). Each \\(\\beta_j\\): expected change in \\(y\\) per unit increase in \\(x_j\\), holding others constant. Adjusted \\(R^2 = 1 - (1-R^2)\\frac{n-1}{n-k-1}\\). F-test: \\(H_0: \\beta_1 = \\dots = \\beta_k = 0\\), \\(F = \\frac{\\text{MSR}}{\\text{MSE}} \\sim F_{k, n-k-1}\\). Individual t-tests: \\(t = \\frac{\\hat{\\beta}_j}{\\text{SE}(\\hat{\\beta}_j)} \\sim t_{n-k-1}\\). Multicollinearity detected by VIF.", quiz: [] },
-        13: { title: "ANOVA (Single-Factor)", summary: "One-way ANOVA compares means of \\(k \\ge 2\\) groups. \\(H_0: \\mu_1 = \\mu_2 = \\dots = \\mu_k\\). SST = SSB + SSW. \\(F = \\frac{\\text{MSB}}{\\text{MSW}} \\sim F_{k-1, n-k}\\). Reject \\(H_0\\) if p-value < \\(\\alpha\\). Post-hoc Tukey HSD identifies which pairs differ. Assumptions: independence, normality, equal variances.", quiz: [] },
-        14: { title: "Quality Control Basics", summary: "p-chart: monitors proportion defective. Center line \\(\\bar{p} = \\frac{\\text{total defects}}{\\text{total units}}\\). Control limits: \\(\\bar{p} \\pm 3 \\sqrt{\\frac{\\bar{p}(1-\\bar{p})}{n}}\\). Points outside limits = special cause variation. \\(\\bar{x}\\)-chart monitors process mean. R-chart monitors process variability. Six Sigma: 3.4 defects per million.", quiz: [] }
+        2: { title: "Probability", summary: "Core Topics: Random experiments, sample space \\(S\\), events, counting techniques: permutations \\( _nP_r = \\frac{n!}{(n-r)!} \\), combinations \\( \\binom{n}{r} = \\frac{n!}{r!(n-r)!} \\). Probability axioms: \\(0 \\le P(A) \\le 1\\), \\(P(S)=1\\), \\(P(A \\cup B)=P(A)+P(B)\\) for disjoint \\(A,B\\). Conditional probability: \\(P(A|B)=\\frac{P(A \\cap B)}{P(B)}\\) for \\(P(B)>0\\). Law of Total Probability: \\(P(A)=\\sum_i P(A|B_i)P(B_i)\\) for partition \\(\\{B_i\\}\\). Bayes' Theorem: \\(P(B_i|A)=\\frac{P(A|B_i)P(B_i)}{\\sum_j P(A|B_j)P(B_j)}\\). Independence: \\(P(A \\cap B)=P(A)P(B)\\).", mc: [], hand: [] },
+        3: { title: "Discrete Random Variables", summary: "Random variable \\(X\\): function from sample space to \\(\\mathbb{R}\\). PMF \\(p(x)=P(X=x)\\). CDF \\(F(x)=P(X \\le x)\\). Mean \\(\\mu = E[X] = \\sum x p(x)\\). Variance \\(\\sigma^2 = \\text{Var}(X) = \\sum (x-\\mu)^2 p(x) = E[X^2]-(E[X])^2\\). Binomial: \\(X = \\#\\text{successes in } n \\text{ trials}\\), success prob \\(p\\). PMF: \\(P(X=x)=\\binom{n}{x}p^x(1-p)^{n-x}\\), mean \\(np\\), variance \\(np(1-p)\\). Poisson: \\(X = \\#\\text{rare events in fixed interval}\\), rate \\(\\lambda>0\\). PMF: \\(P(X=x)=e^{-\\lambda}\\lambda^x/x!\\), mean \\(=\\lambda\\), var \\(=\\lambda\\). Geometric: \\(X = \\#\\text{trials until FIRST success}\\). PMF: \\(P(X=x)=(1-p)^{x-1}p\\), mean \\(1/p\\), var \\((1-p)/p^2\\). Negative Binomial: \\(X = \\#\\text{trials until } r \\text{ successes}\\). PMF: \\(P(X=x)=\\binom{x-1}{r-1}p^r(1-p)^{x-r}\\).", mc: [], hand: [] },
+        4: { title: "Continuous Random Variables", summary: "PDF \\(f(x) \\ge 0\\) with \\(\\int_{-\\infty}^{\\infty} f(x)dx = 1\\). \\(P(a<X<b)=\\int_a^b f(x)dx\\). CDF \\(F(x)=\\int_{-\\infty}^x f(t)dt\\). Mean \\(\\mu = \\int x f(x)dx\\). Variance \\(\\sigma^2 = \\int (x-\\mu)^2 f(x)dx\\). Normal \\(X \\sim N(\\mu,\\sigma^2)\\): \\(f(x)=\\frac{1}{\\sigma\\sqrt{2\\pi}} e^{-(x-\\mu)^2/(2\\sigma^2)}\\). Standardized \\(Z = (X-\\mu)/\\sigma \\sim N(0,1)\\). Exponential \\(X \\sim \\text{Exp}(\\lambda)\\): \\(f(x)=\\lambda e^{-\\lambda x} (x\\ge0)\\), mean \\(1/\\lambda\\), memoryless property. Uniform \\(X \\sim \\text{Uniform}(a,b)\\): \\(f(x)=1/(b-a)\\), mean \\((a+b)/2\\), var \\((b-a)^2/12\\). t-distribution: symmetric, heavier tails, used when \\(\\sigma\\) unknown. Reliability: \\(R(t)=P(T>t)=1-F(t)\\). Hazard rate \\(h(t)=f(t)/R(t)\\).", mc: [], hand: [] },
+        5: { title: "Joint Probability Distributions", summary: "Joint PMF for discrete: \\(f(x,y)=P(X=x, Y=y)\\). Marginal PMFs: \\(f_X(x)=\\sum_y f(x,y)\\), \\(f_Y(y)=\\sum_x f(x,y)\\). Conditional: \\(f(y|x)=f(x,y)/f_X(x)\\). Independence: \\(f(x,y)=f_X(x)f_Y(y)\\) for all \\(x,y\\). Covariance: \\(\\text{Cov}(X,Y)=E[(X-\\mu_X)(Y-\\mu_Y)]=E[XY]-E[X]E[Y]\\). Correlation: \\(\\rho = \\frac{\\text{Cov}(X,Y)}{\\sigma_X \\sigma_Y}\\), \\(-1\\le \\rho \\le 1\\), unitless. Linear combinations: \\(E[aX+bY]=aE[X]+bE[Y]\\). \\(\\text{Var}(aX+bY)=a^2\\text{Var}(X)+b^2\\text{Var}(Y)+2ab\\,\\text{Cov}(X,Y)\\). If independent, \\(\\text{Cov}=0\\) and \\(\\text{Var}(X+Y)=\\text{Var}(X)+\\text{Var}(Y)\\).", mc: [], hand: [] },
+        6: { title: "Descriptive Statistics & R", summary: "Sample mean \\(\\bar{x} = \\frac{1}{n}\\sum_{i=1}^n x_i\\). Sample variance \\(s^2 = \\frac{\\sum (x_i - \\bar{x})^2}{n-1}\\) (unbiased). Sample SD \\(s = \\sqrt{s^2}\\). Median: middle value. Quartiles \\(Q_1\\) (25th), \\(Q_3\\) (75th). IQR \\(= Q_3-Q_1\\). Five-number summary: min, \\(Q_1\\), median, \\(Q_3\\), max. Graphs: histogram, boxplot, scatterplot, time series plot. Sample correlation \\(r = \\frac{\\sum (x_i-\\bar{x})(y_i-\\bar{y})}{\\sqrt{\\sum (x_i-\\bar{x})^2}\\sqrt{\\sum (y_i-\\bar{y})^2}}\\), \\(-1\\le r\\le 1\\). R functions: mean(), var(), sd(), median(), quantile(), hist(), boxplot(), plot(), cor().", mc: [], hand: [] },
+        7: { title: "Point Estimation & Sampling Distributions", summary: "Parameter: population characteristic (\\(\\mu, p, \\sigma^2\\)). Statistic: sample-based estimate (\\(\\bar{x}, \\hat{p}, s^2\\)). Sampling distribution: distribution of a statistic over all possible samples. Unbiased estimator: \\(E[\\text{estimator}] = \\text{parameter}\\). CLT: For large \\(n\\), \\(\\bar{x} \\sim N(\\mu, \\sigma/\\sqrt{n})\\) approximately, regardless of population distribution. Standard error of \\(\\bar{x}\\): \\(\\text{SE} = \\sigma/\\sqrt{n}\\) (estimated by \\(s/\\sqrt{n}\\)). Standard error of \\(\\hat{p}\\): \\(\\text{SE} = \\sqrt{p(1-p)/n}\\) (estimated by \\(\\sqrt{\\hat{p}(1-\\hat{p})/n}\\)). Sample proportion \\(\\hat{p} = X/n\\). For \\(\\hat{p}\\), mean \\(=p\\), variance \\(=p(1-p)/n\\).", mc: [], hand: [] },
+        8: { title: "Confidence Intervals (Single Sample)", summary: "Confidence level \\((1-\\alpha)100\\%\\): proportion of intervals that contain true parameter. CI for \\(\\mu\\) (\\(\\sigma\\) known): \\(\\bar{x} \\pm z_{\\alpha/2} \\cdot \\frac{\\sigma}{\\sqrt{n}}\\), where \\(z_{\\alpha/2}\\) is standard normal critical value (\\(z_{0.025}=1.96\\) for 95%). CI for \\(\\mu\\) (\\(\\sigma\\) unknown): \\(\\bar{x} \\pm t_{\\alpha/2, n-1} \\cdot \\frac{s}{\\sqrt{n}}\\), \\(t\\)-distribution with \\(n-1\\) df. CI for proportion \\(p\\): \\(\\hat{p} \\pm z_{\\alpha/2} \\sqrt{\\frac{\\hat{p}(1-\\hat{p})}{n}}\\), requires \\(n\\hat{p}\\ge 5\\) and \\(n(1-\\hat{p})\\ge 5\\). Margin of error = critical value \\(\\times\\) standard error.", mc: [], hand: [] },
+        9: { title: "Hypothesis Testing (Single Sample)", summary: "\\(H_0\\) (null): statement about parameter (e.g., \\(\\mu = \\mu_0\\)). \\(H_a\\) (alternative): \\(\\mu < \\mu_0\\), \\(\\mu > \\mu_0\\), or \\(\\mu \\neq \\mu_0\\). Test statistic: measures evidence against \\(H_0\\). p-value = \\(P(\\text{data or more extreme} \\mid H_0)\\). Reject \\(H_0\\) if p-value \\(\\le \\alpha\\). Type I error: reject true \\(H_0\\) (prob \\(\\alpha\\)). Type II error: fail reject false \\(H_0\\) (prob \\(\\beta\\)). Power \\(= 1-\\beta\\). z-test (\\(\\sigma\\) known): \\(z_0 = \\frac{\\bar{x} - \\mu_0}{\\sigma/\\sqrt{n}}\\). t-test (\\(\\sigma\\) unknown): \\(t_0 = \\frac{\\bar{x} - \\mu_0}{s/\\sqrt{n}}\\), df \\(= n-1\\). Goodness-of-fit (\\(\\chi^2\\)): \\(H_0: p_1=p_{10},...,p_k=p_{k0}\\). Test stat \\(\\chi^2 = \\sum \\frac{(O_i-E_i)^2}{E_i}\\), df \\(= k-1\\).", mc: [], hand: [] },
+        10: { title: "Two-Sample Inference", summary: "Independent samples: \\(\\bar{x}_1, \\bar{x}_2, s_1, s_2, n_1, n_2\\). Two-sample t-test (Welch, unequal variances): \\(t_0 = \\frac{\\bar{x}_1 - \\bar{x}_2}{\\sqrt{s_1^2/n_1 + s_2^2/n_2}}\\), df by Welch-Satterthwaite. Paired t-test: differences \\(d_i = x_i - y_i\\), then one-sample t-test on \\(d_i\\): \\(t_0 = \\frac{\\bar{d}}{s_d/\\sqrt{n}}\\), df \\(= n-1\\). Two-proportion z-test: \\(H_0: p_1 = p_2\\). Pooled proportion \\(\\hat{p} = \\frac{x_1+x_2}{n_1+n_2}\\). Test stat \\(z_0 = \\frac{\\hat{p}_1 - \\hat{p}_2}{\\sqrt{\\hat{p}(1-\\hat{p})(1/n_1+1/n_2)}}\\).", mc: [], hand: [] },
+        11: { title: "Simple Linear Regression & Correlation", summary: "Model: \\(y = \\beta_0 + \\beta_1 x + \\varepsilon\\), where \\(\\varepsilon \\sim N(0,\\sigma^2)\\). \\(\\beta_0\\) = intercept, \\(\\beta_1\\) = slope. Least squares estimates: \\(\\hat{\\beta}_1 = \\frac{\\sum (x_i-\\bar{x})(y_i-\\bar{y})}{\\sum (x_i-\\bar{x})^2}\\), \\(\\hat{\\beta}_0 = \\bar{y} - \\hat{\\beta}_1\\bar{x}\\). Test \\(H_0: \\beta_1 = 0\\): \\(t = \\frac{\\hat{\\beta}_1}{\\text{SE}(\\hat{\\beta}_1)} \\sim t_{n-2}\\). \\(R^2 = 1 - \\frac{\\text{SSE}}{\\text{SST}}\\), proportion of variance explained. Pearson correlation \\(r\\), \\(r^2 = R^2\\). Assumptions (LINE): Linearity, Independence, Normality, Equal variance.", mc: [], hand: [] },
+        12: { title: "Multiple Linear Regression", summary: "Model: \\(y = \\beta_0 + \\beta_1 x_1 + \\dots + \\beta_k x_k + \\varepsilon\\). Each \\(\\beta_j\\): expected change in \\(y\\) per unit increase in \\(x_j\\), holding others constant. Adjusted \\(R^2 = 1 - (1-R^2)\\frac{n-1}{n-k-1}\\). F-test: \\(H_0: \\beta_1 = \\dots = \\beta_k = 0\\), \\(F = \\frac{\\text{MSR}}{\\text{MSE}} \\sim F_{k, n-k-1}\\). Individual t-tests: \\(t = \\frac{\\hat{\\beta}_j}{\\text{SE}(\\hat{\\beta}_j)} \\sim t_{n-k-1}\\). Multicollinearity detected by VIF.", mc: [], hand: [] },
+        13: { title: "ANOVA (Single-Factor)", summary: "One-way ANOVA compares means of \\(k \\ge 2\\) groups. \\(H_0: \\mu_1 = \\mu_2 = \\dots = \\mu_k\\). SST = SSB + SSW. \\(F = \\frac{\\text{MSB}}{\\text{MSW}} \\sim F_{k-1, n-k}\\). Reject \\(H_0\\) if p-value < \\(\\alpha\\). Post-hoc Tukey HSD identifies which pairs differ. Assumptions: independence, normality, equal variances.", mc: [], hand: [] },
+        14: { title: "Quality Control Basics", summary: "p-chart: monitors proportion defective. Center line \\(\\bar{p} = \\frac{\\text{total defects}}{\\text{total units}}\\). Control limits: \\(\\bar{p} \\pm 3 \\sqrt{\\frac{\\bar{p}(1-\\bar{p})}{n}}\\). Points outside limits = special cause variation. \\(\\bar{x}\\)-chart monitors process mean. R-chart monitors process variability. Six Sigma: 3.4 defects per million.", mc: [], hand: [] }
     };
 
-    // ========== CHAPTER 2 QUIZ ==========
-    chaptersData[2].quiz = [
-        { text: "Two events \\(A\\) and \\(B\\) are independent if \\(P(A \\cap B) = ?\\)", options: ["\\(P(A)+P(B)\\)", "\\(P(A) \\times P(B)\\)", "\\(P(A)/P(B)\\)", "\\(P(A)-P(B)\\)"], correct: 1 },
-        { text: "Bayes' Theorem: \\(P(B_i|A) = ?\\)", options: ["\\(P(A|B_i)/P(A)\\)", "\\(P(A \\cap B_i)/P(B_i)\\)", "\\(\\frac{P(A|B_i)P(B_i)}{\\sum_j P(A|B_j)P(B_j)}\\)", "\\(P(B_i)/P(A)\\)"], correct: 2 },
-        { text: "Law of Total Probability: \\(P(A) = ?\\) for partition \\(\\{B_i\\}\\)", options: ["\\(\\sum P(A \\cap B_i)\\)", "\\(\\sum P(A|B_i)\\)", "\\(\\sum P(A|B_i)P(B_i)\\)", "\\(\\max P(A|B_i)\\)"], correct: 2 },
-        { text: "Sum of two fair dice: \\(P(\\text{sum}=7) = ?\\)", options: ["\\(1/6\\)", "\\(5/36\\)", "\\(1/12\\)", "\\(1/36\\)"], correct: 0 },
-        { text: "Given \\(P(A)=0.4, P(B)=0.5, P(A \\cap B)=0.2\\). Are \\(A\\) and \\(B\\) independent?", options: ["Yes", "No", "Cannot tell", "Only if disjoint"], correct: 0 },
-        { text: "Multiplication principle: \\(m\\) ways for task 1, \\(n\\) for task 2 → total ways = ?", options: ["\\(m+n\\)", "\\(m \\times n\\)", "\\(\\frac{m!}{(m-n)!}\\)", "\\(\\binom{m}{n}\\)"], correct: 1 },
-        { text: "Conditional probability: \\(P(A|B) = ?\\)", options: ["\\(\\frac{P(A \\cap B)}{P(B)}\\)", "\\(\\frac{P(B)}{P(A \\cap B)}\\)", "\\(P(A)P(B)\\)", "\\(\\frac{P(A \\cup B)}{P(B)}\\)"], correct: 0 },
-        { text: "To find \\(P(\\text{disease}|\\text{positive})\\) from sensitivity and prevalence, use:", options: ["Law of Total Probability", "Bayes' Theorem", "Multiplication principle", "Addition rule"], correct: 1 },
-        { text: "Mutually exclusive events: \\(P(A \\cup B) = ?\\)", options: ["\\(P(A)+P(B)-P(A\\cap B)\\)", "\\(P(A)+P(B)\\)", "\\(P(A)P(B)\\)", "\\(P(A)+P(B)+P(A\\cap B)\\)"], correct: 1 },
-        { text: "Permutations of 3 letters from 5: \\(_5P_3 = ?\\)", options: ["60", "20", "10", "120"], correct: 0 }
+    // ========== CHAPTER 2 MC (Probability) ==========
+    chaptersData[2].mc = [
+        { text: "Two events \\(A\\) and \\(B\\) are independent if \\(P(A \\cap B) = ?\\)", options: ["\\(P(A)+P(B)\\)", "\\(P(A) \\times P(B)\\)", "\\(P(A)/P(B)\\)", "\\(P(A)-P(B)\\)"], correct: 1, type: "mc" },
+        { text: "Bayes' Theorem: \\(P(B_i|A) = ?\\)", options: ["\\(P(A|B_i)/P(A)\\)", "\\(P(A \\cap B_i)/P(B_i)\\)", "\\(\\frac{P(A|B_i)P(B_i)}{\\sum_j P(A|B_j)P(B_j)}\\)", "\\(P(B_i)/P(A)\\)"], correct: 2, type: "mc" },
+        { text: "Law of Total Probability: \\(P(A) = ?\\) for partition \\(\\{B_i\\}\\)", options: ["\\(\\sum P(A \\cap B_i)\\)", "\\(\\sum P(A|B_i)\\)", "\\(\\sum P(A|B_i)P(B_i)\\)", "\\(\\max P(A|B_i)\\)"], correct: 2, type: "mc" },
+        { text: "Sum of two fair dice: \\(P(\\text{sum}=7) = ?\\)", options: ["\\(1/6\\)", "\\(5/36\\)", "\\(1/12\\)", "\\(1/36\\)"], correct: 0, type: "mc" },
+        { text: "Given \\(P(A)=0.4, P(B)=0.5, P(A \\cap B)=0.2\\). Are \\(A\\) and \\(B\\) independent?", options: ["Yes", "No", "Cannot tell", "Only if disjoint"], correct: 0, type: "mc" },
+        { text: "Multiplication principle: \\(m\\) ways for task 1, \\(n\\) for task 2 → total ways = ?", options: ["\\(m+n\\)", "\\(m \\times n\\)", "\\(\\frac{m!}{(m-n)!}\\)", "\\(\\binom{m}{n}\\)"], correct: 1, type: "mc" },
+        { text: "Conditional probability: \\(P(A|B) = ?\\)", options: ["\\(\\frac{P(A \\cap B)}{P(B)}\\)", "\\(\\frac{P(B)}{P(A \\cap B)}\\)", "\\(P(A)P(B)\\)", "\\(\\frac{P(A \\cup B)}{P(B)}\\)"], correct: 0, type: "mc" },
+        { text: "To find \\(P(\\text{disease}|\\text{positive})\\) from sensitivity and prevalence, use:", options: ["Law of Total Probability", "Bayes' Theorem", "Multiplication principle", "Addition rule"], correct: 1, type: "mc" },
+        { text: "Mutually exclusive events: \\(P(A \\cup B) = ?\\)", options: ["\\(P(A)+P(B)-P(A\\cap B)\\)", "\\(P(A)+P(B)\\)", "\\(P(A)P(B)\\)", "\\(P(A)+P(B)+P(A\\cap B)\\)"], correct: 1, type: "mc" },
+        { text: "Permutations of 3 letters from 5: \\(_5P_3 = ?\\)", options: ["60", "20", "10", "120"], correct: 0, type: "mc" }
     ];
 
-    // ========== CHAPTER 3 QUIZ ==========
-    chaptersData[3].quiz = [
-        { text: "Binomial mean \\(E[X]\\) for \\(X \\sim \\text{Binomial}(n,p)\\) is:", options: ["\\(np\\)", "\\(np(1-p)\\)", "\\(p\\)", "\\(\\sqrt{np(1-p)}\\)"], correct: 0 },
-        { text: "Variance formula: \\(\\text{Var}(X) = ?\\)", options: ["\\(E[X]\\)", "\\(E[X^2]-(E[X])^2\\)", "\\(\\sum |x-\\mu|p(x)\\)", "\\(\\sqrt{E[X^2]-\\mu^2}\\)"], correct: 1 },
-        { text: "Poisson PMF: \\(P(X=x) = ?\\)", options: ["\\(\\binom{n}{x}p^x(1-p)^{n-x}\\)", "\\((1-p)^{x-1}p\\)", "\\(e^{-\\lambda}\\lambda^x/x!\\)", "\\(1/(b-a)\\)"], correct: 2 },
-        { text: "Geometric distribution: \\(P(X=x) = ?\\) for \\(x=1,2,3,\\dots\\)", options: ["\\((1-p)^{x-1}p\\)", "\\(p^x(1-p)^{x-1}\\)", "\\(\\binom{x-1}{r-1}p^r(1-p)^{x-r}\\)", "\\(e^{-p}p^x/x!\\)"], correct: 0 },
-        { text: "\\(X \\sim \\text{Binomial}(5,0.5)\\). \\(P(X=3) = ?\\)", options: ["0.3125", "0.5", "0.125", "0.25"], correct: 0 },
-        { text: "Sum of all probabilities in a PMF equals:", options: ["0", "1", "\\(n\\)", "\\(\\mu\\)"], correct: 1 },
-        { text: "Negative Binomial: \\(P(X=x) = ?\\)", options: ["\\(\\binom{x-1}{r-1}p^r(1-p)^{x-r}\\)", "\\((1-p)^{x-1}p\\)", "\\(\\binom{n}{x}p^x(1-p)^{n-x}\\)", "\\(e^{-\\lambda}\\lambda^x/x!\\)"], correct: 0 },
-        { text: "\\(E[aX+b] = ?\\)", options: ["\\(aE[X]+b\\)", "\\(aE[X]\\)", "\\(E[X]+b\\)", "\\(a^2E[X]+b\\)"], correct: 0 },
-        { text: "Discrete uniform on {1,...,6}: variance = ?", options: ["2.9167", "3.5", "2", "1"], correct: 0 },
-        { text: "\\(E[X]=3, \\text{Var}(X)=4\\). \\(\\text{Var}(2X-1) = ?\\)", options: ["16", "8", "4", "12"], correct: 0 }
+    // ========== CHAPTER 3 MC (Discrete Random Variables) ==========
+    chaptersData[3].mc = [
+        { text: "Binomial mean \\(E[X]\\) for \\(X \\sim \\text{Binomial}(n,p)\\) is:", options: ["\\(np\\)", "\\(np(1-p)\\)", "\\(p\\)", "\\(\\sqrt{np(1-p)}\\)"], correct: 0, type: "mc" },
+        { text: "Variance formula: \\(\\text{Var}(X) = ?\\)", options: ["\\(E[X]\\)", "\\(E[X^2]-(E[X])^2\\)", "\\(\\sum |x-\\mu|p(x)\\)", "\\(\\sqrt{E[X^2]-\\mu^2}\\)"], correct: 1, type: "mc" },
+        { text: "Poisson PMF: \\(P(X=x) = ?\\)", options: ["\\(\\binom{n}{x}p^x(1-p)^{n-x}\\)", "\\((1-p)^{x-1}p\\)", "\\(e^{-\\lambda}\\lambda^x/x!\\)", "\\(1/(b-a)\\)"], correct: 2, type: "mc" },
+        { text: "Geometric distribution: \\(P(X=x) = ?\\) for \\(x=1,2,3,\\dots\\)", options: ["\\((1-p)^{x-1}p\\)", "\\(p^x(1-p)^{x-1}\\)", "\\(\\binom{x-1}{r-1}p^r(1-p)^{x-r}\\)", "\\(e^{-p}p^x/x!\\)"], correct: 0, type: "mc" },
+        { text: "\\(X \\sim \\text{Binomial}(5,0.5)\\). \\(P(X=3) = ?\\)", options: ["0.3125", "0.5", "0.125", "0.25"], correct: 0, type: "mc" },
+        { text: "Sum of all probabilities in a PMF equals:", options: ["0", "1", "\\(n\\)", "\\(\\mu\\)"], correct: 1, type: "mc" },
+        { text: "Negative Binomial: \\(P(X=x) = ?\\)", options: ["\\(\\binom{x-1}{r-1}p^r(1-p)^{x-r}\\)", "\\((1-p)^{x-1}p\\)", "\\(\\binom{n}{x}p^x(1-p)^{n-x}\\)", "\\(e^{-\\lambda}\\lambda^x/x!\\)"], correct: 0, type: "mc" },
+        { text: "\\(E[aX+b] = ?\\)", options: ["\\(aE[X]+b\\)", "\\(aE[X]\\)", "\\(E[X]+b\\)", "\\(a^2E[X]+b\\)"], correct: 0, type: "mc" },
+        { text: "Discrete uniform on {1,...,6}: variance = ?", options: ["2.9167", "3.5", "2", "1"], correct: 0, type: "mc" },
+        { text: "\\(E[X]=3, \\text{Var}(X)=4\\). \\(\\text{Var}(2X-1) = ?\\)", options: ["16", "8", "4", "12"], correct: 0, type: "mc" }
     ];
 
-    // ========== CHAPTER 4 QUIZ ==========
-    chaptersData[4].quiz = [
-        { text: "For continuous RV, \\(P(X=c) = ?\\)", options: ["0", "1", "\\(f(c)\\)", "depends"], correct: 0 },
-        { text: "\\(Z = (X-\\mu)/\\sigma\\) for \\(X \\sim N(\\mu,\\sigma^2)\\) follows:", options: ["\\(N(0,1)\\)", "\\(N(\\mu,\\sigma^2)\\)", "t-distribution", "Exponential"], correct: 0 },
-        { text: "Exponential mean \\(E[X]\\) for \\(X \\sim \\text{Exp}(\\lambda)\\) is:", options: ["\\(1/\\lambda\\)", "\\(\\lambda\\)", "\\(1/\\lambda^2\\)", "\\(\\lambda^2\\)"], correct: 0 },
-        { text: "Total area under a PDF is:", options: ["0", "1", "\\(\\infty\\)", "depends"], correct: 1 },
-        { text: "\\(X \\sim N(100,15)\\). Z-score for \\(X=115\\) is:", options: ["1", "-1", "1.5", "0.5"], correct: 0 },
-        { text: "t-distribution is used when:", options: ["\\(\\sigma\\) unknown", "\\(\\sigma\\) known", "n small", "for proportions"], correct: 0 },
-        { text: "Variance of continuous RV: \\(\\text{Var}(X) = ?\\)", options: ["\\(\\int (x-\\mu)^2 f(x)dx\\)", "\\(\\int |x-\\mu| f(x)dx\\)", "\\(\\int x f(x)dx\\)", "\\(\\sqrt{\\int x^2 f(x)dx - \\mu^2}\\)"], correct: 0 },
-        { text: "Reliability \\(R(t) = P(T>t) = ?\\)", options: ["\\(1-F(t)\\)", "\\(f(t)\\)", "\\(F(t)\\)", "\\(h(t)\\)"], correct: 0 },
-        { text: "Uniform on [a,b]: mean = ?", options: ["\\((a+b)/2\\)", "\\((b-a)/2\\)", "\\(a+b\\)", "\\(ab/2\\)"], correct: 0 },
-        { text: "Memoryless property: \\(P(X>s+t|X>s)=P(X>t)\\) holds for:", options: ["Exponential", "Normal", "Uniform", "t"], correct: 0 }
+    // ========== CHAPTER 4 MC (Continuous Random Variables) ==========
+    chaptersData[4].mc = [
+        { text: "For continuous RV, \\(P(X=c) = ?\\)", options: ["0", "1", "\\(f(c)\\)", "depends"], correct: 0, type: "mc" },
+        { text: "\\(Z = (X-\\mu)/\\sigma\\) for \\(X \\sim N(\\mu,\\sigma^2)\\) follows:", options: ["\\(N(0,1)\\)", "\\(N(\\mu,\\sigma^2)\\)", "t-distribution", "Exponential"], correct: 0, type: "mc" },
+        { text: "Exponential mean \\(E[X]\\) for \\(X \\sim \\text{Exp}(\\lambda)\\) is:", options: ["\\(1/\\lambda\\)", "\\(\\lambda\\)", "\\(1/\\lambda^2\\)", "\\(\\lambda^2\\)"], correct: 0, type: "mc" },
+        { text: "Total area under a PDF is:", options: ["0", "1", "\\(\\infty\\)", "depends"], correct: 1, type: "mc" },
+        { text: "\\(X \\sim N(100,15)\\). Z-score for \\(X=115\\) is:", options: ["1", "-1", "1.5", "0.5"], correct: 0, type: "mc" },
+        { text: "t-distribution is used when:", options: ["\\(\\sigma\\) unknown", "\\(\\sigma\\) known", "n small", "for proportions"], correct: 0, type: "mc" },
+        { text: "Variance of continuous RV: \\(\\text{Var}(X) = ?\\)", options: ["\\(\\int (x-\\mu)^2 f(x)dx\\)", "\\(\\int |x-\\mu| f(x)dx\\)", "\\(\\int x f(x)dx\\)", "\\(\\sqrt{\\int x^2 f(x)dx - \\mu^2}\\)"], correct: 0, type: "mc" },
+        { text: "Reliability \\(R(t) = P(T>t) = ?\\)", options: ["\\(1-F(t)\\)", "\\(f(t)\\)", "\\(F(t)\\)", "\\(h(t)\\)"], correct: 0, type: "mc" },
+        { text: "Uniform on [a,b]: mean = ?", options: ["\\((a+b)/2\\)", "\\((b-a)/2\\)", "\\(a+b\\)", "\\(ab/2\\)"], correct: 0, type: "mc" },
+        { text: "Memoryless property: \\(P(X>s+t|X>s)=P(X>t)\\) holds for:", options: ["Exponential", "Normal", "Uniform", "t"], correct: 0, type: "mc" }
     ];
 
-    // ========== CHAPTER 5 QUIZ ==========
-    chaptersData[5].quiz = [
-        { text: "If \\(X,Y\\) independent, \\(\\text{Cov}(X,Y) = ?\\)", options: ["0", "1", "\\(\\text{Var}(X)\\text{Var}(Y)\\)", "\\(E[XY]\\)"], correct: 0 },
-        { text: "Correlation \\(\\rho\\) lies between:", options: ["\\(-1\\) and \\(1\\)", "0 and 1", "\\(-\\infty\\) and \\(\\infty\\)", "\\(-\\pi\\) and \\(\\pi\\)"], correct: 0 },
-        { text: "Marginal \\(f_X(x) = ?\\)", options: ["\\(\\sum_y f(x,y)\\)", "\\(\\sum_x f(x,y)\\)", "\\(f(x,y)/f_Y(y)\\)", "\\(f_X(x)f_Y(y)\\)"], correct: 0 },
-        { text: "\\(\\rho = 0.92\\) indicates:", options: ["Strong positive linear", "Weak negative", "No correlation", "Perfect negative"], correct: 0 },
-        { text: "\\(E[X+Y] = ?\\)", options: ["\\(E[X]+E[Y]\\)", "\\(E[X]E[Y]\\)", "\\(\\text{Var}(X)+\\text{Var}(Y)\\)", "\\(\\text{Cov}(X,Y)\\)"], correct: 0 },
-        { text: "Conditional \\(f(y|x) = ?\\)", options: ["\\(f(x,y)/f_X(x)\\)", "\\(f_X(x)/f(x,y)\\)", "\\(f(x)f(y)\\)", "\\(\\sum f(x,y)\\)"], correct: 0 },
-        { text: "\\(\\text{Cov}(X,Y) > 0\\) means \\(X\\) and \\(Y\\) tend to:", options: ["Move together", "Move opposite", "Be independent", "Be constant"], correct: 0 },
-        { text: "If independent, \\(\\text{Var}(X+Y) = ?\\)", options: ["\\(\\text{Var}(X)+\\text{Var}(Y)\\)", "\\(\\text{Var}(X)-\\text{Var}(Y)\\)", "\\(\\text{Var}(X)\\text{Var}(Y)\\)", "\\(\\text{Cov}(X,Y)\\)"], correct: 0 },
-        { text: "Correlation is unitless:", options: ["True", "False"], correct: 0 },
-        { text: "If independent, \\(E[XY] = ?\\)", options: ["\\(E[X]E[Y]\\)", "\\(E[X]+E[Y]\\)", "\\(\\text{Var}(X)\\text{Var}(Y)\\)", "0"], correct: 0 }
+    // ========== CHAPTER 5 MC (Joint Distributions) ==========
+    chaptersData[5].mc = [
+        { text: "If \\(X,Y\\) independent, \\(\\text{Cov}(X,Y) = ?\\)", options: ["0", "1", "\\(\\text{Var}(X)\\text{Var}(Y)\\)", "\\(E[XY]\\)"], correct: 0, type: "mc" },
+        { text: "Correlation \\(\\rho\\) lies between:", options: ["\\(-1\\) and \\(1\\)", "0 and 1", "\\(-\\infty\\) and \\(\\infty\\)", "\\(-\\pi\\) and \\(\\pi\\)"], correct: 0, type: "mc" },
+        { text: "Marginal \\(f_X(x) = ?\\)", options: ["\\(\\sum_y f(x,y)\\)", "\\(\\sum_x f(x,y)\\)", "\\(f(x,y)/f_Y(y)\\)", "\\(f_X(x)f_Y(y)\\)"], correct: 0, type: "mc" },
+        { text: "\\(\\rho = 0.92\\) indicates:", options: ["Strong positive linear", "Weak negative", "No correlation", "Perfect negative"], correct: 0, type: "mc" },
+        { text: "\\(E[X+Y] = ?\\)", options: ["\\(E[X]+E[Y]\\)", "\\(E[X]E[Y]\\)", "\\(\\text{Var}(X)+\\text{Var}(Y)\\)", "\\(\\text{Cov}(X,Y)\\)"], correct: 0, type: "mc" },
+        { text: "Conditional \\(f(y|x) = ?\\)", options: ["\\(f(x,y)/f_X(x)\\)", "\\(f_X(x)/f(x,y)\\)", "\\(f(x)f(y)\\)", "\\(\\sum f(x,y)\\)"], correct: 0, type: "mc" },
+        { text: "\\(\\text{Cov}(X,Y) > 0\\) means \\(X\\) and \\(Y\\) tend to:", options: ["Move together", "Move opposite", "Be independent", "Be constant"], correct: 0, type: "mc" },
+        { text: "If independent, \\(\\text{Var}(X+Y) = ?\\)", options: ["\\(\\text{Var}(X)+\\text{Var}(Y)\\)", "\\(\\text{Var}(X)-\\text{Var}(Y)\\)", "\\(\\text{Var}(X)\\text{Var}(Y)\\)", "\\(\\text{Cov}(X,Y)\\)"], correct: 0, type: "mc" },
+        { text: "Correlation is unitless:", options: ["True", "False"], correct: 0, type: "mc" },
+        { text: "If independent, \\(E[XY] = ?\\)", options: ["\\(E[X]E[Y]\\)", "\\(E[X]+E[Y]\\)", "\\(\\text{Var}(X)\\text{Var}(Y)\\)", "0"], correct: 0, type: "mc" }
     ];
 
-    // ========== CHAPTER 6 QUIZ ==========
-    chaptersData[6].quiz = [
-        { text: "Sample variance uses \\(n-1\\) to make \\(s^2\\):", options: ["Unbiased for \\(\\sigma^2\\)", "Smaller", "Larger", "Equal to \\(\\sigma^2\\)"], correct: 0 },
-        { text: "Five-number summary includes:", options: ["Min, Q1, Median, Q3, Max", "Mean, SD, min, max", "IQR, range", "All percentiles"], correct: 0 },
-        { text: "Boxplot displays:", options: ["Median and IQR", "Histogram bars", "Correlation", "Time trend"], correct: 0 },
-        { text: "Best plot for linear relationship:", options: ["Scatterplot", "Boxplot", "Stem-and-leaf", "Histogram"], correct: 0 },
-        { text: "\\(r = -0.85\\) indicates:", options: ["Strong negative linear", "Strong positive", "Weak", "No relation"], correct: 0 },
-        { text: "Skewed right: mean is typically:", options: ["> median", "< median", "= median", "zero"], correct: 0 },
-        { text: "Range of {5,9,3,12} is:", options: ["9", "8", "7", "12"], correct: 0 },
-        { text: "IQR = ?", options: ["\\(Q_3 - Q_1\\)", "\\(Q_1 + Q_3\\)", "Median \\(- Q_1\\)", "Max \\(- \\text{Min}\\)"], correct: 0 },
-        { text: "Histogram bins should be:", options: ["Equal width", "Unequal", "Overlapping", "Categorical"], correct: 0 },
-        { text: "Time series plot is for:", options: ["Trend over time", "Comparing groups", "Correlation", "Distribution shape"], correct: 0 }
+    // ========== CHAPTER 6 MC (Descriptive Statistics) ==========
+    chaptersData[6].mc = [
+        { text: "Sample variance uses \\(n-1\\) to make \\(s^2\\):", options: ["Unbiased for \\(\\sigma^2\\)", "Smaller", "Larger", "Equal to \\(\\sigma^2\\)"], correct: 0, type: "mc" },
+        { text: "Five-number summary includes:", options: ["Min, Q1, Median, Q3, Max", "Mean, SD, min, max", "IQR, range", "All percentiles"], correct: 0, type: "mc" },
+        { text: "Boxplot displays:", options: ["Median and IQR", "Histogram bars", "Correlation", "Time trend"], correct: 0, type: "mc" },
+        { text: "Best plot for linear relationship:", options: ["Scatterplot", "Boxplot", "Stem-and-leaf", "Histogram"], correct: 0, type: "mc" },
+        { text: "\\(r = -0.85\\) indicates:", options: ["Strong negative linear", "Strong positive", "Weak", "No relation"], correct: 0, type: "mc" },
+        { text: "Skewed right: mean is typically:", options: ["> median", "< median", "= median", "zero"], correct: 0, type: "mc" },
+        { text: "Range of {5,9,3,12} is:", options: ["9", "8", "7", "12"], correct: 0, type: "mc" },
+        { text: "IQR = ?", options: ["\\(Q_3 - Q_1\\)", "\\(Q_1 + Q_3\\)", "Median \\(- Q_1\\)", "Max \\(- \\text{Min}\\)"], correct: 0, type: "mc" },
+        { text: "Histogram bins should be:", options: ["Equal width", "Unequal", "Overlapping", "Categorical"], correct: 0, type: "mc" },
+        { text: "Time series plot is for:", options: ["Trend over time", "Comparing groups", "Correlation", "Distribution shape"], correct: 0, type: "mc" }
     ];
 
-    // ========== CHAPTER 7 QUIZ ==========
-    chaptersData[7].quiz = [
-        { text: "CLT: for large \\(n\\), \\(\\bar{x}\\) is approx:", options: ["\\(N(\\mu, \\sigma/\\sqrt{n})\\)", "\\(N(0,1)\\)", "Exponential", "Binomial"], correct: 0 },
-        { text: "Standard error of \\(\\bar{x}\\) (estimated) = ?", options: ["\\(s/\\sqrt{n}\\)", "\\(\\sigma/\\sqrt{n}\\)", "\\(s^2\\)", "\\(\\sqrt{\\hat{p}(1-\\hat{p})/n}\\)"], correct: 0 },
-        { text: "Unbiased estimator satisfies:", options: ["\\(E[\\hat{\\theta}] = \\theta\\)", "\\(\\hat{\\theta} = \\theta\\)", "\\(\\text{Var}(\\hat{\\theta})=0\\)", "Bias = \\(\\theta\\)"], correct: 0 },
-        { text: "\\(\\hat{p}\\) is unbiased for:", options: ["Population proportion \\(p\\)", "Population mean \\(\\mu\\)", "Population variance", "Median"], correct: 0 },
-        { text: "\\(n=100, \\sigma=10\\), SE(\\(\\bar{x}\\)) = ?", options: ["1", "10", "0.1", "100"], correct: 0 },
-        { text: "Sampling distribution describes:", options: ["Distribution of statistic", "Population values", "Parameter", "Raw data"], correct: 0 },
-        { text: "CLT applies if:", options: ["\\(n\\) large", "Population normal", "\\(\\sigma\\) known", "Data categorical"], correct: 0 },
-        { text: "\\(\\text{Var}(\\hat{p}) = ?\\)", options: ["\\(p(1-p)/n\\)", "\\(np(1-p)\\)", "\\(\\sqrt{p(1-p)/n}\\)", "\\(p(1-p)n\\)"], correct: 0 },
-        { text: "Point estimate for \\(\\mu\\) is:", options: ["\\(\\bar{x}\\)", "\\(s\\)", "\\(\\sigma\\)", "median"], correct: 0 },
-        { text: "Decreasing bias often leads to:", options: ["Increased variance", "Decreased variance", "No change", "Lower MSE always"], correct: 0 }
+    // ========== CHAPTER 7 MC (Point Estimation & Sampling Distributions) ==========
+    chaptersData[7].mc = [
+        { text: "CLT: for large \\(n\\), \\(\\bar{x}\\) is approx:", options: ["\\(N(\\mu, \\sigma/\\sqrt{n})\\)", "\\(N(0,1)\\)", "Exponential", "Binomial"], correct: 0, type: "mc" },
+        { text: "Standard error of \\(\\bar{x}\\) (estimated) = ?", options: ["\\(s/\\sqrt{n}\\)", "\\(\\sigma/\\sqrt{n}\\)", "\\(s^2\\)", "\\(\\sqrt{\\hat{p}(1-\\hat{p})/n}\\)"], correct: 0, type: "mc" },
+        { text: "Unbiased estimator satisfies:", options: ["\\(E[\\hat{\\theta}] = \\theta\\)", "\\(\\hat{\\theta} = \\theta\\)", "\\(\\text{Var}(\\hat{\\theta})=0\\)", "Bias = \\(\\theta\\)"], correct: 0, type: "mc" },
+        { text: "\\(\\hat{p}\\) is unbiased for:", options: ["Population proportion \\(p\\)", "Population mean \\(\\mu\\)", "Population variance", "Median"], correct: 0, type: "mc" },
+        { text: "\\(n=100, \\sigma=10\\), SE(\\(\\bar{x}\\)) = ?", options: ["1", "10", "0.1", "100"], correct: 0, type: "mc" },
+        { text: "Sampling distribution describes:", options: ["Distribution of statistic", "Population values", "Parameter", "Raw data"], correct: 0, type: "mc" },
+        { text: "CLT applies if:", options: ["\\(n\\) large", "Population normal", "\\(\\sigma\\) known", "Data categorical"], correct: 0, type: "mc" },
+        { text: "\\(\\text{Var}(\\hat{p}) = ?\\)", options: ["\\(p(1-p)/n\\)", "\\(np(1-p)\\)", "\\(\\sqrt{p(1-p)/n}\\)", "\\(p(1-p)n\\)"], correct: 0, type: "mc" },
+        { text: "Point estimate for \\(\\mu\\) is:", options: ["\\(\\bar{x}\\)", "\\(s\\)", "\\(\\sigma\\)", "median"], correct: 0, type: "mc" },
+        { text: "Decreasing bias often leads to:", options: ["Increased variance", "Decreased variance", "No change", "Lower MSE always"], correct: 0, type: "mc" }
     ];
 
-    // ========== CHAPTER 8 QUIZ ==========
-    chaptersData[8].quiz = [
-        { text: "95% CI for \\(\\mu\\) (\\(\\sigma\\) known) uses \\(z_{0.025} = ?\\)", options: ["1.96", "2.576", "1.645", "2.0"], correct: 0 },
-        { text: "Increasing \\(n\\) makes CI width:", options: ["Decrease", "Increase", "Same", "Double"], correct: 0 },
-        { text: "t-interval used when:", options: ["\\(\\sigma\\) unknown", "\\(\\sigma\\) known", "n small and \\(\\sigma\\) known", "for proportion"], correct: 0 },
-        { text: "CI for proportion requires:", options: ["\\(n\\hat{p} \\ge 5, n(1-\\hat{p}) \\ge 5\\)", "Normal population", "\\(\\sigma\\) known", "\\(n \\ge 30\\) only"], correct: 0 },
-        { text: "90% CI (4.5,5.5) means:", options: ["90% confident \\(\\mu\\) in (4.5,5.5)", "90% prob \\(\\mu\\) in interval", "90% data inside", "\\(\\bar{x}=5.0\\)"], correct: 0 },
-        { text: "Margin of error (\\(\\sigma\\) known) = ?", options: ["\\(z \\cdot \\sigma/\\sqrt{n}\\)", "\\(t \\cdot s/\\sqrt{n}\\)", "\\(z \\cdot s/\\sqrt{n}\\)", "\\(z \\cdot \\sqrt{\\hat{p}(1-\\hat{p})/n}\\)"], correct: 0 },
-        { text: "99% confidence uses \\(z \\approx ?\\)", options: ["2.58", "1.96", "1.645", "2.33"], correct: 0 },
-        { text: "If CI contains null value, hypothesis test:", options: ["Fails to reject \\(H_0\\)", "Rejects \\(H_0\\)", "Depends", "Always rejects"], correct: 0 },
-        { text: "Higher confidence level makes CI:", options: ["Wider", "Narrower", "Same", "Zero"], correct: 0 },
-        { text: "One-sided upper bound (\\(\\sigma\\) known):", options: ["\\(\\bar{x} + z_{\\alpha} \\cdot \\sigma/\\sqrt{n}\\)", "\\(\\bar{x} - z_{\\alpha} \\cdot \\sigma/\\sqrt{n}\\)", "\\(\\bar{x} \\pm z \\cdot \\sigma/\\sqrt{n}\\)", "\\(\\bar{x} + t \\cdot s/\\sqrt{n}\\)"], correct: 0 }
+    // ========== CHAPTER 8 MC (Confidence Intervals) ==========
+    chaptersData[8].mc = [
+        { text: "95% CI for \\(\\mu\\) (\\(\\sigma\\) known) uses \\(z_{0.025} = ?\\)", options: ["1.96", "2.576", "1.645", "2.0"], correct: 0, type: "mc" },
+        { text: "Increasing \\(n\\) makes CI width:", options: ["Decrease", "Increase", "Same", "Double"], correct: 0, type: "mc" },
+        { text: "t-interval used when:", options: ["\\(\\sigma\\) unknown", "\\(\\sigma\\) known", "n small and \\(\\sigma\\) known", "for proportion"], correct: 0, type: "mc" },
+        { text: "CI for proportion requires:", options: ["\\(n\\hat{p} \\ge 5, n(1-\\hat{p}) \\ge 5\\)", "Normal population", "\\(\\sigma\\) known", "\\(n \\ge 30\\) only"], correct: 0, type: "mc" },
+        { text: "90% CI (4.5,5.5) means:", options: ["90% confident \\(\\mu\\) in (4.5,5.5)", "90% prob \\(\\mu\\) in interval", "90% data inside", "\\(\\bar{x}=5.0\\)"], correct: 0, type: "mc" },
+        { text: "Margin of error (\\(\\sigma\\) known) = ?", options: ["\\(z \\cdot \\sigma/\\sqrt{n}\\)", "\\(t \\cdot s/\\sqrt{n}\\)", "\\(z \\cdot s/\\sqrt{n}\\)", "\\(z \\cdot \\sqrt{\\hat{p}(1-\\hat{p})/n}\\)"], correct: 0, type: "mc" },
+        { text: "99% confidence uses \\(z \\approx ?\\)", options: ["2.58", "1.96", "1.645", "2.33"], correct: 0, type: "mc" },
+        { text: "If CI contains null value, hypothesis test:", options: ["Fails to reject \\(H_0\\)", "Rejects \\(H_0\\)", "Depends", "Always rejects"], correct: 0, type: "mc" },
+        { text: "Higher confidence level makes CI:", options: ["Wider", "Narrower", "Same", "Zero"], correct: 0, type: "mc" },
+        { text: "One-sided upper bound (\\(\\sigma\\) known):", options: ["\\(\\bar{x} + z_{\\alpha} \\cdot \\sigma/\\sqrt{n}\\)", "\\(\\bar{x} - z_{\\alpha} \\cdot \\sigma/\\sqrt{n}\\)", "\\(\\bar{x} \\pm z \\cdot \\sigma/\\sqrt{n}\\)", "\\(\\bar{x} + t \\cdot s/\\sqrt{n}\\)"], correct: 0, type: "mc" }
     ];
 
-    // ========== CHAPTER 9 QUIZ ==========
-    chaptersData[9].quiz = [
-        { text: "Type I error = ?", options: ["Reject true \\(H_0\\)", "Fail reject false \\(H_0\\)", "Reject false \\(H_0\\)", "Accept \\(H_0\\)"], correct: 0 },
-        { text: "p-value is:", options: ["\\(P(\\text{data or more extreme} \\mid H_0)\\)", "\\(P(H_0 \\text{ true})\\)", "\\(\\alpha\\)", "Power"], correct: 0 },
-        { text: "p=0.03, \\(\\alpha=0.05\\): decision?", options: ["Reject \\(H_0\\)", "Fail reject \\(H_0\\)", "Accept \\(H_0\\)", "Need more data"], correct: 0 },
-        { text: "Left-tailed p-value = ?", options: ["\\(P(T \\le t_0)\\)", "\\(P(T \\ge t_0)\\)", "\\(2P(T \\ge |t_0|)\\)", "\\(1-\\alpha\\)"], correct: 0 },
-        { text: "Goodness-of-fit uses:", options: ["\\(\\chi^2\\) distribution", "t", "Normal", "F"], correct: 0 },
-        { text: "Independence test df = ?", options: ["\\((r-1)(c-1)\\)", "\\(r+c-2\\)", "\\(n-1\\)", "\\(n-2\\)"], correct: 0 },
-        { text: "Power = \\(1-\\beta\\) = probability of:", options: ["Reject false \\(H_0\\)", "Accept \\(H_0\\)", "Type I error", "p<α"], correct: 0 },
-        { text: "If CI excludes null value, we:", options: ["Reject \\(H_0\\) at α", "Fail reject \\(H_0\\)", "Increase α", "Cannot decide"], correct: 0 },
-        { text: "One-sample t-statistic:", options: ["\\((\\bar{x}-\\mu_0)/(s/\\sqrt{n})\\)", "\\((\\bar{x}-\\mu_0)/(\\sigma/\\sqrt{n})\\)", "\\((\\bar{x}-\\mu_0)/s\\)", "\\((\\bar{x}-\\mu_0)\\sqrt{n}\\)"], correct: 0 },
-        { text: "\\(\\chi^2 = \\sum (O-E)^2/E\\) has approx:", options: ["\\(\\chi^2\\) distribution", "Normal", "t", "F"], correct: 0 }
+    // ========== CHAPTER 9 MC (Hypothesis Testing) ==========
+    chaptersData[9].mc = [
+        { text: "Type I error = ?", options: ["Reject true \\(H_0\\)", "Fail reject false \\(H_0\\)", "Reject false \\(H_0\\)", "Accept \\(H_0\\)"], correct: 0, type: "mc" },
+        { text: "p-value is:", options: ["\\(P(\\text{data or more extreme} \\mid H_0)\\)", "\\(P(H_0 \\text{ true})\\)", "\\(\\alpha\\)", "Power"], correct: 0, type: "mc" },
+        { text: "p=0.03, \\(\\alpha=0.05\\): decision?", options: ["Reject \\(H_0\\)", "Fail reject \\(H_0\\)", "Accept \\(H_0\\)", "Need more data"], correct: 0, type: "mc" },
+        { text: "Left-tailed p-value = ?", options: ["\\(P(T \\le t_0)\\)", "\\(P(T \\ge t_0)\\)", "\\(2P(T \\ge |t_0|)\\)", "\\(1-\\alpha\\)"], correct: 0, type: "mc" },
+        { text: "Goodness-of-fit uses:", options: ["\\(\\chi^2\\) distribution", "t", "Normal", "F"], correct: 0, type: "mc" },
+        { text: "Independence test df = ?", options: ["\\((r-1)(c-1)\\)", "\\(r+c-2\\)", "\\(n-1\\)", "\\(n-2\\)"], correct: 0, type: "mc" },
+        { text: "Power = \\(1-\\beta\\) = probability of:", options: ["Reject false \\(H_0\\)", "Accept \\(H_0\\)", "Type I error", "p<α"], correct: 0, type: "mc" },
+        { text: "If CI excludes null value, we:", options: ["Reject \\(H_0\\) at α", "Fail reject \\(H_0\\)", "Increase α", "Cannot decide"], correct: 0, type: "mc" },
+        { text: "One-sample t-statistic:", options: ["\\((\\bar{x}-\\mu_0)/(s/\\sqrt{n})\\)", "\\((\\bar{x}-\\mu_0)/(\\sigma/\\sqrt{n})\\)", "\\((\\bar{x}-\\mu_0)/s\\)", "\\((\\bar{x}-\\mu_0)\\sqrt{n}\\)"], correct: 0, type: "mc" },
+        { text: "\\(\\chi^2 = \\sum (O-E)^2/E\\) has approx:", options: ["\\(\\chi^2\\) distribution", "Normal", "t", "F"], correct: 0, type: "mc" }
     ];
 
-    // ========== CHAPTER 10 QUIZ ==========
-    chaptersData[10].quiz = [
-        { text: "Paired t-test used for:", options: ["Dependent samples", "Independent samples", "Two proportions", ">2 groups"], correct: 0 },
-        { text: "Welch t-test assumes:", options: ["Unequal variances", "Equal variances", "Normality only", "Large n only"], correct: 0 },
-        { text: "Pooled proportion \\(\\hat{p} = ?\\)", options: ["\\((x_1+x_2)/(n_1+n_2)\\)", "\\(x_1/n_1\\)", "\\((\\hat{p}_1+\\hat{p}_2)/2\\)", "\\(x_1/n_1 + x_2/n_2\\)"], correct: 0 },
-        { text: "Two-proportion test uses:", options: ["z-test", "t-test", "F-test", "\\(\\chi^2\\)"], correct: 0 },
-        { text: "\\(\\text{Var}(\\bar{x}_1-\\bar{x}_2) = ?\\)", options: ["\\(\\sigma_1^2/n_1 + \\sigma_2^2/n_2\\)", "\\(\\sigma_1^2/n_1 - \\sigma_2^2/n_2\\)", "\\(\\sigma^2(1/n_1+1/n_2)\\)", "0"], correct: 0 },
-        { text: "CI for \\(\\mu_1-\\mu_2\\) (unequal var) uses:", options: ["t with Welch df", "Normal z", "\\(\\chi^2\\)", "F"], correct: 0 },
-        { text: "Paired t-test df = ?", options: ["\\(n-1\\)", "\\(n-2\\)", "\\(2n-2\\)", "\\(n_1+n_2-2\\)"], correct: 0 },
-        { text: "Null for two-sample t-test:", options: ["\\(\\mu_1 = \\mu_2\\)", "\\(\\mu_1 \\neq \\mu_2\\)", "\\(\\bar{x}_1 = \\bar{x}_2\\)", "\\(\\sigma_1 = \\sigma_2\\)"], correct: 0 },
-        { text: "R: t.test(x,y,paired=TRUE) does:", options: ["Paired t-test", "Two-sample t-test", "ANOVA", "Wilcoxon"], correct: 0 },
-        { text: "CI for \\(p_1-p_2\\) uses:", options: ["z critical", "t critical", "\\(\\chi^2\\)", "F"], correct: 0 }
+    // ========== CHAPTER 10 MC (Two-Sample Inference) - UNIQUE ==========
+    chaptersData[10].mc = [
+        { text: "The paired t-test is appropriate when:", options: ["Samples are dependent (e.g., before/after on same subjects)", "Samples are independent", "Comparing two proportions", "Comparing more than two groups"], correct: 0, type: "mc" },
+        { text: "The Welch two-sample t-test (default in R) assumes:", options: ["Unequal population variances", "Equal variances", "Normality only", "Large sample sizes only"], correct: 0, type: "mc" },
+        { text: "Pooled proportion \\(\\hat{p}\\) for testing \\(H_0: p_1 = p_2\\) is calculated as:", options: ["\\(\\frac{x_1+x_2}{n_1+n_2}\\)", "\\(\\frac{x_1}{n_1}\\)", "\\(\\frac{\\hat{p}_1+\\hat{p}_2}{2}\\)", "\\(\\frac{x_1}{n_1} + \\frac{x_2}{n_2}\\)"], correct: 0, type: "mc" },
+        { text: "The large-sample test for two population proportions uses which distribution?", options: ["Standard normal (\\(z\\))", "\\(t\\)-distribution", "\\(F\\)-distribution", "Chi-square"], correct: 0, type: "mc" },
+        { text: "For independent samples, \\(\\text{Var}(\\bar{x}_1 - \\bar{x}_2) = ?\\)", options: ["\\(\\frac{\\sigma_1^2}{n_1} + \\frac{\\sigma_2^2}{n_2}\\)", "\\(\\frac{\\sigma_1^2}{n_1} - \\frac{\\sigma_2^2}{n_2}\\)", "\\(\\sigma^2(\\frac{1}{n_1}+\\frac{1}{n_2})\\)", "0"], correct: 0, type: "mc" },
+        { text: "A confidence interval for \\(\\mu_1-\\mu_2\\) with unequal variances uses critical values from:", options: ["\\(t\\)-distribution with Welch df", "Standard normal", "Chi-square", "\\(F\\)"], correct: 0, type: "mc" },
+        { text: "Paired t-test degrees of freedom (with \\(n\\) pairs) is:", options: ["\\(n-1\\)", "\\(n-2\\)", "\\(2n-2\\)", "\\(n_1+n_2-2\\)"], correct: 0, type: "mc" },
+        { text: "The null hypothesis for a two-sample t-test comparing means is typically:", options: ["\\(H_0: \\mu_1 = \\mu_2\\)", "\\(H_0: \\mu_1 \\neq \\mu_2\\)", "\\(H_0: \\bar{x}_1 = \\bar{x}_2\\)", "\\(H_0: \\sigma_1 = \\sigma_2\\)"], correct: 0, type: "mc" },
+        { text: "In R, \\(\\text{t.test}(x, y, \\text{paired} = \\text{TRUE})\\) performs:", options: ["Paired t-test", "Two-sample independent t-test", "ANOVA", "Wilcoxon test"], correct: 0, type: "mc" },
+        { text: "A confidence interval for the difference in proportions \\(p_1-p_2\\) uses:", options: ["\\(z\\) critical value", "\\(t\\) critical value", "Chi-square", "\\(F\\)"], correct: 0, type: "mc" }
     ];
 
-    // ========== CHAPTER 11 QUIZ ==========
-    chaptersData[11].quiz = [
-        { text: "In \\(y = \\beta_0 + \\beta_1 x + \\varepsilon\\), \\(\\beta_1\\) is:", options: ["Slope", "Intercept", "Correlation", "\\(R^2\\)"], correct: 0 },
-        { text: "\\(H_0: \\beta_1 = 0\\) tests:", options: ["Linear relationship", "Intercept zero", "Normality", "Constant variance"], correct: 0 },
-        { text: "\\(R^2 = 0.85\\) means:", options: ["85% variation explained", "Weak relationship", "Slope negative", "High bias"], correct: 0 },
-        { text: "Pearson \\(r\\) and \\(\\hat{\\beta}_1\\) have same:", options: ["Sign", "Magnitude", "SE", "p-value"], correct: 0 },
-        { text: "Residual = ?", options: ["\\(y_i - \\hat{y}_i\\)", "\\(\\hat{y}_i - y_i\\)", "\\(y_i/\\hat{y}_i\\)", "Mean of Y"], correct: 0 },
-        { text: "Least squares minimizes:", options: ["\\(\\sum (y_i-\\hat{y}_i)^2\\)", "\\(\\sum |y_i-\\hat{y}_i|\\)", "\\(\\sum (y_i-\\bar{y})^2\\)", "\\(\\sum (\\hat{y}_i-\\bar{y})^2\\)"], correct: 0 },
-        { text: "\\(r = 0\\) means:", options: ["No linear relationship", "Perfect positive", "Slope infinite", "Strong correlation"], correct: 0 },
-        { text: "Regression line passes through:", options: ["\\((\\bar{x}, \\bar{y})\\)", "\\((0,0)\\)", "\\((\\min x, \\min y)\\)", "\\((\\max x, \\max y)\\)"], correct: 0 },
-        { text: "SE(\\(\\hat{\\beta}_1\\)) used in:", options: ["t-test for \\(\\beta_1=0\\)", "F-test", "ANOVA", "Prediction interval"], correct: 0 },
-        { text: "Constant variance assumption = ?", options: ["Homoscedasticity", "Heteroscedasticity", "Linearity", "Normality"], correct: 0 }
+    // ========== CHAPTER 11 MC (Simple Linear Regression) - UNIQUE ==========
+    chaptersData[11].mc = [
+        { text: "In the model \\(y = \\beta_0 + \\beta_1 x + \\varepsilon\\), what does \\(\\beta_1\\) represent?", options: ["Slope (change in mean \\(y\\) per unit \\(x\\))", "Intercept", "Correlation", "\\(R^2\\)"], correct: 0, type: "mc" },
+        { text: "The test \\(H_0: \\beta_1 = 0\\) vs \\(H_a: \\beta_1 \\neq 0\\) tests for:", options: ["Significant linear relationship", "Intercept \\(= 0\\)", "Normality of errors", "Constant variance"], correct: 0, type: "mc" },
+        { text: "\\(R^2 = 0.82\\) means:", options: ["82% of variation in \\(y\\) explained by \\(x\\)", "Weak relationship", "Slope negative", "High bias"], correct: 0, type: "mc" },
+        { text: "The Pearson correlation \\(r\\) and the estimated slope \\(\\hat{\\beta}_1\\) have the same:", options: ["Sign (positive or negative)", "Magnitude", "Standard error", "p-value"], correct: 0, type: "mc" },
+        { text: "A residual in regression is defined as:", options: ["\\(y_i - \\hat{y}_i\\) (observed minus predicted)", "\\(\\hat{y}_i - y_i\\)", "\\(y_i/\\hat{y}_i\\)", "Mean of \\(y\\)"], correct: 0, type: "mc" },
+        { text: "The method of least squares minimizes:", options: ["\\(\\sum (y_i - \\hat{y}_i)^2\\)", "\\(\\sum |y_i - \\hat{y}_i|\\)", "\\(\\sum (y_i - \\bar{y})^2\\)", "\\(\\sum (\\hat{y}_i - \\bar{y})^2\\)"], correct: 0, type: "mc" },
+        { text: "If the sample correlation \\(r = 0\\), this indicates:", options: ["No linear relationship", "Perfect positive relationship", "Slope is infinite", "Strong nonlinear relationship"], correct: 0, type: "mc" },
+        { text: "The least squares regression line always passes through the point:", options: ["\\((\\bar{x}, \\bar{y})\\)", "\\((0,0)\\)", "\\((\\min x, \\min y)\\)", "\\((\\max x, \\max y)\\)"], correct: 0, type: "mc" },
+        { text: "The standard error of the slope \\(\\text{SE}(\\hat{\\beta}_1)\\) is used in:", options: ["\\(t\\)-test for \\(H_0: \\beta_1=0\\)", "\\(F\\)-test only", "ANOVA table only", "Prediction interval"], correct: 0, type: "mc" },
+        { text: "The assumption of constant variance of errors is called:", options: ["Homoscedasticity", "Heteroscedasticity", "Linearity", "Normality"], correct: 0, type: "mc" }
     ];
 
-    // ========== CHAPTER 12 QUIZ ==========
-    chaptersData[12].quiz = [
-        { text: "Adjusted \\(R^2\\) adjusts for:", options: ["Number of predictors", "Sample size", "Outliers", "Non-normality"], correct: 0 },
-        { text: "Multiple linear regression model:", options: ["\\(y = \\beta_0 + \\beta_1 x_1 + ... + \\beta_k x_k + \\varepsilon\\)", "\\(y = \\beta_0 + \\beta_1 x\\)", "\\(y = \\alpha + \\beta x^2\\)", "\\(\\log(y) = \\alpha + \\beta x\\)"], correct: 0 },
-        { text: "Overall F-test tests:", options: ["All slopes = 0", "Individual slope=0", "Normality", "Multicollinearity"], correct: 0 },
-        { text: "High correlation among predictors causes:", options: ["Multicollinearity", "Heteroscedasticity", "Autocorrelation", "Nonlinearity"], correct: 0 },
-        { text: "Interpretation of \\(\\beta_1\\) (holding others constant):", options: ["Change in y per unit x₁", "Change in y ignoring others", "Partial effect", "All of these"], correct: 3 },
-        { text: "Residual plots check:", options: ["Linearity & equal variance", "Independence of X", "Zero mean", "All of these"], correct: 3 },
-        { text: "OLS minimizes:", options: ["SSE", "SST", "SSR", "RSS"], correct: 0 },
-        { text: "VIF detects:", options: ["Multicollinearity", "Outliers", "Non-normality", "Interaction"], correct: 0 },
-        { text: "Prediction uses:", options: ["Estimated equation", "Mean of Y", "ANOVA table", "Correlation matrix"], correct: 0 },
-        { text: "p<0.05 for coefficient means:", options: ["Statistically significant", "Not significant", "Removed", "Collinear"], correct: 0 }
+    // ========== CHAPTER 12 MC (Multiple Linear Regression) - UNIQUE ==========
+    chaptersData[12].mc = [
+        { text: "Adjusted \\(R^2\\) differs from regular \\(R^2\\) by:", options: ["Penalizing addition of unnecessary predictors", "Always being larger than \\(R^2\\)", "Not using residuals", "Using only one predictor"], correct: 0, type: "mc" },
+        { text: "The multiple linear regression model with \\(k\\) predictors is:", options: ["\\(y = \\beta_0 + \\beta_1 x_1 + \\dots + \\beta_k x_k + \\varepsilon\\)", "\\(y = \\beta_0 + \\beta_1 x\\)", "\\(y = \\alpha + \\beta x^2\\)", "\\(\\log(y) = \\alpha + \\beta x\\)"], correct: 0, type: "mc" },
+        { text: "The overall \\(F\\)-test in multiple regression tests:", options: ["\\(H_0: \\beta_1 = \\beta_2 = \\dots = \\beta_k = 0\\)", "\\(H_0: \\text{each } \\beta_j = 0 \\text{ individually}\\)", "Normality", "Multicollinearity"], correct: 0, type: "mc" },
+        { text: "High correlation among predictor variables is called:", options: ["Multicollinearity", "Heteroscedasticity", "Autocorrelation", "Nonlinearity"], correct: 0, type: "mc" },
+        { text: "Interpretation of \\(\\beta_1\\) in \\(y = \\beta_0 + \\beta_1 x_1 + \\beta_2 x_2 + \\varepsilon\\) is:", options: ["Change in \\(y\\) per unit \\(x_1\\), holding \\(x_2\\) constant", "Change in \\(y\\) ignoring \\(x_2\\)", "Correlation between \\(x_1\\) and \\(y\\)", "Partial effect - all of these"], correct: 3, type: "mc" },
+        { text: "Residual plots (residuals vs fitted values) are used to check:", options: ["Linearity and constant variance", "Independence only", "Normality only", "All of these"], correct: 3, type: "mc" },
+        { text: "OLS (ordinary least squares) minimizes:", options: ["SSE \\(= \\sum (y_i - \\hat{y}_i)^2\\)", "SST", "SSR", "RSS \\(= \\sum (\\hat{y}_i - \\bar{y})^2\\)"], correct: 0, type: "mc" },
+        { text: "Variance Inflation Factor (VIF) is a diagnostic for:", options: ["Multicollinearity", "Outliers", "Non-normality", "Interaction effects"], correct: 0, type: "mc" },
+        { text: "To make a prediction for new predictor values, we use:", options: ["Estimated equation \\(\\hat{y} = b_0 + b_1 x_1 + \\dots + b_k x_k\\)", "Mean of \\(y\\)", "ANOVA table", "Correlation matrix"], correct: 0, type: "mc" },
+        { text: "If p-value for \\(\\beta_j\\) is less than \\(\\alpha\\) (e.g., 0.05), we conclude \\(x_j\\) is:", options: ["Statistically significant in the model", "Not significant", "Should be removed", "Causes multicollinearity"], correct: 0, type: "mc" }
     ];
 
-    // ========== CHAPTER 13 QUIZ ==========
-    chaptersData[13].quiz = [
-        { text: "One-way ANOVA compares:", options: ["Means of ≥2 groups", "Variances", "Proportions", "Medians"], correct: 0 },
-        { text: "ANOVA F-statistic = ?", options: ["MSB/MSW", "MSW/MSB", "SSB/SSW", "SST/SSE"], correct: 0 },
-        { text: "Tukey HSD used after:", options: ["Reject H₀ in ANOVA", "Fail reject H₀", "Small sample", "Paired data"], correct: 0 },
-        { text: "ANOVA assumptions include:", options: ["Normality, equal variance, independence", "Independence only", "Homogeneity of slopes", "No outliers"], correct: 0 },
-        { text: "p < α in ANOVA means:", options: ["At least two means differ", "All means equal", "Variances differ", "Medians differ"], correct: 0 },
-        { text: "Completely randomized design assigns treatments:", options: ["Randomly", "By block", "Systematically", "Non-random"], correct: 0 },
-        { text: "Within-group variation (SSW) measures:", options: ["Error variability", "Treatment effect", "Total variation", "Factor effect"], correct: 0 },
-        { text: "SST = ?", options: ["SSB + SSW", "SSB - SSW", "SSW/SSB", "SSB × SSW"], correct: 0 },
-        { text: "Between-groups df with k groups = ?", options: ["k-1", "n-k", "n-1", "k"], correct: 0 },
-        { text: "Tukey HSD controls:", options: ["Family-wise error rate", "Type I per comparison", "Power", "FDR"], correct: 0 }
+    // ========== CHAPTER 13 MC (ANOVA) - UNIQUE ==========
+    chaptersData[13].mc = [
+        { text: "One-way ANOVA is used to compare:", options: ["Means of three or more groups (\\(k \\ge 2\\))", "Variances of two groups", "Proportions of two groups", "Medians of two groups"], correct: 0, type: "mc" },
+        { text: "The ANOVA \\(F\\)-statistic is calculated as:", options: ["\\(\\text{MSB}/\\text{MSW}\\)", "\\(\\text{MSW}/\\text{MSB}\\)", "\\(\\text{SSB}/\\text{SSW}\\)", "\\(\\text{SST}/\\text{SSE}\\)"], correct: 0, type: "mc" },
+        { text: "Tukey's HSD post-hoc test is performed after ANOVA when:", options: ["\\(H_0\\) is rejected (means differ significantly)", "\\(H_0\\) is not rejected", "Sample sizes are small", "Data are paired"], correct: 0, type: "mc" },
+        { text: "Assumptions of one-way ANOVA include:", options: ["Independence, normality, equal variances", "Independence only", "Normality but unequal variances", "No outliers"], correct: 0, type: "mc" },
+        { text: "If p-value from ANOVA < \\(\\alpha\\) (e.g., 0.05), we conclude:", options: ["At least two group means differ", "All group means are equal", "All group means are different", "Variances are unequal"], correct: 0, type: "mc" },
+        { text: "In a completely randomized design, treatments are assigned to experimental units:", options: ["Randomly", "Based on blocks", "Systematically", "Alphabetically"], correct: 0, type: "mc" },
+        { text: "Within-group variation (SSW) measures:", options: ["Random error variability within groups", "Treatment effect", "Total variation", "Between-group differences"], correct: 0, type: "mc" },
+        { text: "Total sum of squares SST equals:", options: ["SSB + SSW", "SSB - SSW", "SSW/SSB", "SSB × SSW"], correct: 0, type: "mc" },
+        { text: "Degrees of freedom for between groups (MSB) with \\(k\\) groups is:", options: ["\\(k-1\\)", "\\(n-k\\)", "\\(n-1\\)", "\\(k\\)"], correct: 0, type: "mc" },
+        { text: "Tukey's HSD test controls:", options: ["Family-wise error rate", "Type I error per comparison", "Power", "False discovery rate"], correct: 0, type: "mc" }
     ];
 
-    // ========== CHAPTER 14 QUIZ ==========
-    chaptersData[14].quiz = [
-        { text: "p-chart monitors:", options: ["Proportion defective", "Process mean", "Range", "Count of defects"], correct: 0 },
-        { text: "UCL for p-chart formula:", options: ["\\(\\bar{p} + 3\\sqrt{\\bar{p}(1-\\bar{p})/n}\\)", "\\(\\bar{p} + 2\\sqrt{\\bar{p}(1-\\bar{p})/n}\\)", "\\(\\bar{p} + 3\\bar{p}\\)", "\\(\\bar{p} + 3/n\\)"], correct: 0 },
-        { text: "Point outside control limits indicates:", options: ["Special cause variation", "Common cause", "Process improvement", "Measurement error"], correct: 0 },
-        { text: "SPC goal:", options: ["Monitor process stability", "Increase defects", "Change specs", "Reduce sample size"], correct: 0 },
-        { text: "\\(\\bar{x}\\)-chart monitors:", options: ["Process mean", "Variation", "Proportion defective", "Number of defects"], correct: 0 },
-        { text: "If LCL negative in p-chart, we:", options: ["Set LCL = 0", "Use negative value", "Ignore limit", "Increase sample"], correct: 0 },
-        { text: "R-chart monitors:", options: ["Within-sample range", "Mean", "Proportion", "Count"], correct: 0 },
-        { text: "Control limits based on:", options: ["Process variation", "Customer specs", "Tolerances", "Target values"], correct: 0 },
-        { text: "Six Sigma aims for defects below:", options: ["3.4 per million", "1%", "0.1%", "1000 ppm"], correct: 0 },
-        { text: "R package for p-charts:", options: ["qcc", "ggplot2", "dplyr", "lattice"], correct: 0 }
+    // ========== CHAPTER 14 MC (Quality Control) - UNIQUE ==========
+    chaptersData[14].mc = [
+        { text: "A p-chart (control chart for proportions) monitors:", options: ["Proportion of defective items", "Process mean", "Process variability (range)", "Count of defects per unit"], correct: 0, type: "mc" },
+        { text: "For a p-chart with constant sample size \\(n\\), the upper control limit (UCL) formula is:", options: ["\\(\\bar{p} + 3 \\sqrt{\\frac{\\bar{p}(1-\\bar{p})}{n}}\\)", "\\(\\bar{p} + 2 \\sqrt{\\frac{\\bar{p}(1-\\bar{p})}{n}}\\)", "\\(\\bar{p} + 3\\bar{p}\\)", "\\(\\bar{p} + 3/n\\)"], correct: 0, type: "mc" },
+        { text: "A point outside the control limits on a control chart indicates:", options: ["Special cause variation (assignable cause)", "Common cause variation", "Process is in control", "Measurement error only"], correct: 0, type: "mc" },
+        { text: "The primary goal of Statistical Process Control (SPC) is:", options: ["Monitor process stability and detect special causes", "Increase defect rate", "Change product specifications", "Reduce sample sizes"], correct: 0, type: "mc" },
+        { text: "An \\(\\bar{x}\\)-chart (X-bar chart) is used to monitor:", options: ["Process mean over time", "Process variability", "Proportion defective", "Number of defects"], correct: 0, type: "mc" },
+        { text: "If the computed Lower Control Limit (LCL) for a p-chart is negative, we should:", options: ["Set LCL = 0 (proportion cannot be negative)", "Use the negative value", "Ignore the lower limit", "Increase the sample size"], correct: 0, type: "mc" },
+        { text: "An R-chart (range chart) monitors:", options: ["Within-sample variability (range)", "Process mean", "Proportion defective", "Count of defects"], correct: 0, type: "mc" },
+        { text: "Control limits (UCL, LCL) are based on:", options: ["Process variation (common cause)", "Customer specifications", "Tolerance limits", "Target values only"], correct: 0, type: "mc" },
+        { text: "Six Sigma quality aims for defect rate below:", options: ["3.4 per million opportunities (DPMO)", "1%", "0.1%", "1000 ppm"], correct: 0, type: "mc" },
+        { text: "Which R package is commonly used to create p-charts and control charts?", options: ["qcc", "ggplot2", "dplyr", "lattice"], correct: 0, type: "mc" }
+    ];
+
+    // ========== HAND CALCULATION QUESTIONS (5 per chapter) - SAME AS BEFORE ==========
+    chaptersData[2].hand = [
+        { text: "🏭 Quality Control: A factory produces circuit boards. Machine A produces 40% of boards with defect rate 2%. Machine B produces 60% of boards with defect rate 5%. A random board is found defective. Calculate P(A|defective) using Bayes' Theorem. Enter as decimal rounded to 4 places.", answer: 0.2105, tolerance: 0.001, type: "hand" },
+        { text: "🏥 Medical Testing: A disease affects 1 in 500 people (prevalence = 0.002). A test has sensitivity 98% and specificity 95%. Calculate P(disease|positive). Enter decimal rounded to 4 places.", answer: 0.0380, tolerance: 0.002, type: "hand" },
+        { text: "🎲 Dice Game: Two fair six-sided dice are rolled. Calculate the probability that the sum is 8 OR the first die shows 4. Use P(A∪B)=P(A)+P(B)-P(A∩B). Enter as simplified fraction.", answer: "5/18", tolerance: 0.001, type: "hand" },
+        { text: "📦 Shipping: A warehouse has 200 items: 120 from Supplier X (2% defective) and 80 from Supplier Y (5% defective). An item is randomly selected and found defective. Calculate the probability it came from Supplier Y. Enter decimal to 4 places.", answer: 0.4000, tolerance: 0.01, type: "hand" },
+        { text: "🎯 Manufacturing: Two machines produce bolts. Machine 1 makes 70% of bolts with 1% defective. Machine 2 makes 30% of bolts with 3% defective. A bolt is defective. Calculate P(Machine 1|defective). Enter decimal rounded to 4 places.", answer: 0.4375, tolerance: 0.002, type: "hand" }
+    ];
+
+    chaptersData[3].hand = [
+        { text: "📞 Call Center: A call center receives an average of λ=5 calls per minute (Poisson). Calculate P(exactly 3 calls) = e^{-5}·5³/3!. Enter decimal rounded to 4 places.", answer: 0.1404, tolerance: 0.002, type: "hand" },
+        { text: "🔩 Manufacturing: Defect probability p=0.05. Let X = items inspected until FIRST defective (geometric). Calculate P(X=3) = (0.95)²×0.05. Enter decimal rounded to 4 places.", answer: 0.0451, tolerance: 0.002, type: "hand" },
+        { text: "⚙️ Quality Control: Sample n=20 from batch with defect rate p=0.1. Let X ~ Binomial(20,0.1). Calculate mean μ=np and variance σ²=np(1-p). Enter as: mean, variance", answer: "2,1.8", tolerance: 0.05, type: "hand" },
+        { text: "📊 Customer Arrivals: Store averages λ=8 customers/hour (Poisson). Calculate P(arrivals > 10) = 1 - P(X≤10). Enter decimal to 4 places.", answer: 0.1840, tolerance: 0.02, type: "hand" },
+        { text: "🎲 Betting Game: Roll a fair die until getting a 6. X = number of rolls needed. P(X=4) = (5/6)³×(1/6). Enter as simplified fraction.", answer: "125/1296", tolerance: 0.001, type: "hand" }
+    ];
+
+    chaptersData[4].hand = [
+        { text: "⚙️ Engineering Tolerance: Part diameter X~N(50mm, σ=0.5mm). Specs: 49mm ≤ X ≤ 51mm. Calculate P(49<X<51) = P(-2<Z<2). Enter decimal (≈0.9545) to 4 places.", answer: 0.9545, tolerance: 0.002, type: "hand" },
+        { text: "🔋 Battery Lifetime: Battery life T~Exp(λ=0.2 per year). Calculate P(T > 6) = e^{-1.2}. Enter decimal to 4 places.", answer: 0.3012, tolerance: 0.002, type: "hand" },
+        { text: "📦 Shipping Weight: Box weight X~N(μ=10kg, σ=0.8kg). Calculate 90th percentile (z₀.₉₀=1.28): μ + z·σ. Enter kg to 2 decimals.", answer: "11.02", tolerance: 0.05, type: "hand" },
+        { text: "🕒 Waiting Time: Bus arrival X~Uniform(0,20) minutes. Calculate P(X > 15). Enter as simplified fraction.", answer: "1/4", tolerance: 0.01, type: "hand" },
+        { text: "📊 Test Scores: Exam scores X~N(μ=75, σ=10). Proportion scoring above 85? Z=1, P(Z>1)=? Enter decimal to 4 places.", answer: 0.1587, tolerance: 0.002, type: "hand" }
+    ];
+
+    chaptersData[5].hand = [
+        { text: "📈 Stock Returns: X and Y. E[X]=0.08, E[Y]=0.12, Var(X)=0.04, Var(Y)=0.09, Cov=0.015. Calculate correlation ρ = Cov/(σ_Xσ_Y). Enter decimal to 4 places.", answer: 0.2500, tolerance: 0.01, type: "hand" },
+        { text: "📊 Portfolio Variance: From above, Var(0.6X+0.4Y) = 0.6²Var(X)+0.4²Var(Y)+2·0.6·0.4·Cov. Enter decimal to 4 places.", answer: 0.0294, tolerance: 0.002, type: "hand" },
+        { text: "🔧 Manufacturing: Joint PMF: P(1,1)=0.3, P(1,2)=0.2, P(2,1)=0.1, P(2,2)=0.4. Calculate E[X]. Enter decimal.", answer: 1.5, tolerance: 0.05, type: "hand" },
+        { text: "📉 Covariance: From same data, calculate E[Y] then Cov=E[XY]-E[X]E[Y]. Enter decimal to 3 places.", answer: 0.05, tolerance: 0.02, type: "hand" },
+        { text: "🔬 Research: Var(X)=4, Var(Y)=9, Cov=3. Calculate Var(X+Y)=Var(X)+Var(Y)+2Cov. Enter integer.", answer: "19", tolerance: 0.5, type: "hand" }
+    ];
+
+    chaptersData[6].hand = [
+        { text: "📏 Measurements: Data: 10.2, 10.5, 10.3, 10.7, 10.1. Calculate sample mean x̄ and variance s². Enter as: mean, variance (2 decimals)", answer: "10.36,0.058", tolerance: 0.05, type: "hand" },
+        { text: "📊 Test Scores: 65,70,75,80,85,90. Find Q1 and Q3. Enter as: Q1, Q3 (integers)", answer: "70,85", tolerance: 1, type: "hand" },
+        { text: "📈 Correlation: x=[1,2,3,4,5], y=[2,4,6,8,10]. Calculate correlation r (perfect linear). Enter integer.", answer: "1", tolerance: 0.01, type: "hand" },
+        { text: "📦 Boxplot: Data: 12,15,18,20,22,25,30. Find IQR = Q3-Q1. Enter integer.", answer: "10", tolerance: 1, type: "hand" },
+        { text: "🔬 Experiment: Data: 5,7,8,6,9. Calculate standard deviation s = √s². Enter decimal to 3 places.", answer: "1.581", tolerance: 0.02, type: "hand" }
+    ];
+
+    chaptersData[7].hand = [
+        { text: "🏭 Factory: μ=100, σ=15, n=36. P(x̄ > 103) = P(Z > 1.2). Enter decimal to 4 places.", answer: 0.1151, tolerance: 0.002, type: "hand" },
+        { text: "📊 Survey: n=400, 120 support. p̂=0.3. SE = √[0.3×0.7/400]. Enter decimal to 4 places.", answer: 0.0229, tolerance: 0.001, type: "hand" },
+        { text: "🔬 Sampling: p=0.6, n=100. P(p̂ > 0.65). Z = 0.05/0.049 = 1.02. P(Z>1.02)=? Enter decimal.", answer: 0.1539, tolerance: 0.005, type: "hand" },
+        { text: "📈 Mean: μ=50, σ=8, n=64. P(x̄ < 48.5) = P(Z < -1.5). Enter decimal.", answer: 0.0668, tolerance: 0.002, type: "hand" },
+        { text: "📦 Margin: p̂=0.3, n=400. 95% ME = 1.96×SE. Enter decimal to 4 places.", answer: 0.0449, tolerance: 0.002, type: "hand" }
+    ];
+
+    chaptersData[8].hand = [
+        { text: "🔧 Strength: n=25, x̄=120, s=12. 95% CI: t₀.₀₂₅,₂₄≈2.064. CI = x̄ ± t·s/√n. Enter: lower, upper (integers)", answer: "115,125", tolerance: 2, type: "hand" },
+        { text: "📊 Poll: n=500, 275 support. p̂=0.55. 95% CI = p̂ ± 1.96√[p̂(1-p̂)/n]. Enter: lower, upper (4 decimals)", answer: "0.5064,0.5936", tolerance: 0.01, type: "hand" },
+        { text: "🏭 Process: σ=5, n=36, x̄=104. 90% CI: z₀.₀₅=1.645. ME=1.645×5/6=1.371. Enter: lower, upper (3 decimals)", answer: "102.629,105.371", tolerance: 0.1, type: "hand" },
+        { text: "📏 Sample Size: E=2, 95% CI, σ=10. n = (1.96×10/2)². Enter integer (round up).", answer: "97", tolerance: 0, type: "hand" },
+        { text: "🔬 Proportion n: No prior estimate, E=0.03, 95%. n = (1.96/0.03)²×0.25. Enter integer.", answer: "1068", tolerance: 10, type: "hand" }
+    ];
+
+    chaptersData[9].hand = [
+        { text: "🏭 Hypothesis: H₀: μ=100, Hₐ: μ≠100. n=36, x̄=104, s=12. t₀ = 4/2 = 2. Critical t=2.03. Reject H₀? Enter 'Reject' or 'Fail to Reject'.", answer: "Reject", tolerance: 0, type: "hand" },
+        { text: "🎲 Die Fairness: 60 rolls. Observed: 8,12,10,9,11,10. Expected=10. χ² = Σ(O-E)²/E = 1. χ²₀.₀₅,₅=11.07. Conclusion? Enter 'Fair' or 'Unfair'.", answer: "Fair", tolerance: 0, type: "hand" },
+        { text: "📈 One-tailed: Hₐ: μ>100. n=25, x̄=103, s=8, t₀=1.875. Critical t₀.₀₅,₂₄=1.711. Reject? Enter 'Yes' or 'No'.", answer: "Yes", tolerance: 0, type: "hand" },
+        { text: "📊 Proportion: H₀: p=0.5, Hₐ: p>0.5. n=100, x=60, z₀=2. p-value=0.0228. α=0.05. Reject? Enter 'Yes' or 'No'.", answer: "Yes", tolerance: 0, type: "hand" },
+        { text: "🔬 Independence: 2×2 table, χ²=5.02, critical χ²₀.₀₅,₁=3.84. Evidence of dependence? Enter 'Yes' or 'No'.", answer: "Yes", tolerance: 0, type: "hand" }
+    ];
+
+    chaptersData[10].hand = [
+        { text: "⚙️ Two-Sample: n₁=30, x̄₁=85, s₁=10; n₂=30, x̄₂=80, s₂=12. Calculate t₀ = (85-80)/√(10²/30+12²/30). Enter to 2 decimals.", answer: "1.76", tolerance: 0.05, type: "hand" },
+        { text: "📊 Two Proportions: x₁=25, n₁=100; x₂=15, n₂=100. Pooled p̂ = (25+15)/200 = ? Enter decimal.", answer: "0.2", tolerance: 0.01, type: "hand" },
+        { text: "🔬 Paired: Differences: 2,3,1,4,2. Calculate d̄ and s_d. Enter as: mean, sd (2 decimals)", answer: "2.4,1.14", tolerance: 0.1, type: "hand" },
+        { text: "📈 CI Difference: From Q1, calculate 95% CI using t=2.0. Enter: lower, upper (2 decimals)", answer: "1.5,8.5", tolerance: 0.5, type: "hand" },
+        { text: "🏭 Proportion Difference: p̂₁=0.25, p̂₂=0.15, n₁=n₂=100. SE = √[0.25×0.75/100 + 0.15×0.85/100]. Enter to 4 decimals.", answer: "0.0566", tolerance: 0.005, type: "hand" }
+    ];
+
+    chaptersData[11].hand = [
+        { text: "📈 Linear Regression: x=[1,2,3,4], y=[3,5,7,9]. Calculate slope β̂₁ = Σ(x-x̄)(y-ȳ)/Σ(x-x̄)². Enter integer.", answer: "2", tolerance: 0.1, type: "hand" },
+        { text: "📊 R²: From above, SSE=0, SST=20. R² = 1 - SSE/SST. Enter integer.", answer: "1", tolerance: 0.01, type: "hand" },
+        { text: "🔧 Prediction: Using ŷ = 1 + 2x, predict y when x=5. Enter integer.", answer: "11", tolerance: 0.5, type: "hand" },
+        { text: "📉 Residual: x=3, y=7, predicted ŷ=7. Residual = y - ŷ. Enter integer.", answer: "0", tolerance: 0.1, type: "hand" },
+        { text: "🔬 Correlation: From Q1, calculate r = β̂₁·(s_x/s_y). Enter integer.", answer: "1", tolerance: 0.01, type: "hand" }
+    ];
+
+    chaptersData[12].hand = [
+        { text: "📊 Adjusted R²: n=50, k=3, R²=0.64. Adj R² = 1 - (1-0.64)(49)/(46). Enter to 3 decimals.", answer: "0.618", tolerance: 0.005, type: "hand" },
+        { text: "🔧 SSR and SST: SSR=1200, SST=2000. Calculate R². Enter decimal.", answer: "0.6", tolerance: 0.01, type: "hand" },
+        { text: "📈 F-test: MSR=150, MSE=30. Calculate F = MSR/MSE. Enter integer.", answer: "5", tolerance: 0.5, type: "hand" },
+        { text: "🔬 Interpretation: p-value for β₁=0.03, α=0.05. Significant? Enter 'Yes' or 'No'.", answer: "Yes", tolerance: 0, type: "hand" },
+        { text: "🏭 Multicollinearity: VIF=8. Is this concerning (>5)? Enter 'Yes' or 'No'.", answer: "Yes", tolerance: 0, type: "hand" }
+    ];
+
+    chaptersData[13].hand = [
+        { text: "🔬 ANOVA: Group1: 5,6,7; Group2: 4,5,6; Group3: 9,10,11. Calculate overall mean ȳ.. Enter integer.", answer: "7", tolerance: 0.5, type: "hand" },
+        { text: "📊 SSB: From above, n_i=3, group means: 6,5,10. SSB = 3[(6-7)²+(5-7)²+(10-7)²] = ? Enter integer.", answer: "42", tolerance: 1, type: "hand" },
+        { text: "📈 F-statistic: MSB=21, MSW=1.5. F = MSB/MSW = ? Enter integer.", answer: "14", tolerance: 0.5, type: "hand" },
+        { text: "🔬 Critical F: df1=2, df2=6. α=0.05, F_crit≈5.14. Is result significant? Enter 'Yes' or 'No'.", answer: "Yes", tolerance: 0, type: "hand" },
+        { text: "📊 Tukey: Difference between Group3 and Group1 means = ? Enter integer.", answer: "4", tolerance: 0.5, type: "hand" }
+    ];
+
+    chaptersData[14].hand = [
+        { text: "🏭 p-chart: 20 samples, n=50 each, total defects=45. Calculate p̄ = total defects / total units. Enter decimal to 4 places.", answer: "0.045", tolerance: 0.002, type: "hand" },
+        { text: "📈 UCL: p̄ + 3√[p̄(1-p̄)/n] = 0.045 + 3√[0.045×0.955/50]. Enter to 4 places.", answer: "0.0828", tolerance: 0.003, type: "hand" },
+        { text: "🔧 Sample: n=50, 8 defects. p̂ = 8/50 = ? Enter decimal.", answer: "0.16", tolerance: 0.01, type: "hand" },
+        { text: "📊 Out of control? Compare p̂=0.16 to UCL=0.0828. Enter 'Yes' or 'No'.", answer: "Yes", tolerance: 0, type: "hand" },
+        { text: "🏭 LCL: Calculate LCL = p̄ - 3√[p̄(1-p̄)/n]. If negative, LCL=0. Enter to 4 places.", answer: "0.0072", tolerance: 0.003, type: "hand" }
     ];
 
     // ========== RENDER FUNCTION ==========
     function renderChapterPanel(chNum, data) {
-        const questions = data.quiz;
-        const qHtml = questions.map((q, idx) => {
-            const optHtml = q.options.map((opt, optIdx) => `
-                <label class="option">
-                    <input type="radio" name="q${chNum}_${idx}" value="${optIdx}">
-                    <span>${opt}</span>
-                </label>
-            `).join('');
-            return `
-                <div class="question" data-correct="${q.correct}">
-                    <p><strong>${idx+1}.</strong> ${q.text}</p>
-                    <div class="options">${optHtml}</div>
-                    <div class="feedback" id="fb_${chNum}_${idx}"></div>
-                </div>
-            `;
+        const mcQuestions = data.mc;
+        const handQuestions = data.hand;
+        const mcHtml = mcQuestions.map((q, idx) => {
+            const optHtml = q.options.map((opt, optIdx) => `<label class="option"><input type="radio" name="mc_q${chNum}_${idx}" value="${optIdx}"><span>${opt}</span></label>`).join('');
+            return `<div class="question" data-type="mc" data-correct="${q.correct}"><p><strong>MC ${idx+1}.</strong> ${q.text}</p><div class="options">${optHtml}</div><div class="feedback" id="mc_fb_${chNum}_${idx}"></div></div>`;
         }).join('');
-        return `
-            <div id="panel-${chNum}" class="panel">
-                <div class="summary-card">
-                    <h3>📘 Chapter ${chNum}: ${data.title}</h3>
-                    <p>${data.summary}</p>
-                </div>
-                <div class="quiz-section">
-                    <div class="quiz-header">
-                        <h3>✍️ 10-Question Quiz</h3>
-                        <button class="submit-quiz" data-ch="${chNum}">✅ Check Answers</button>
-                        <button class="reset-quiz" data-ch="${chNum}">⟳ Reset</button>
-                    </div>
-                    <div id="quiz-container-${chNum}">${qHtml}</div>
-                    <div class="score-area" id="score-${chNum}"></div>
-                </div>
-            </div>
-        `;
+        const handHtml = handQuestions.map((q, idx) => {
+            return `<div class="question" data-type="hand" data-correct="${q.answer}" data-tolerance="${q.tolerance}"><p><strong>✏️ Hand Calc ${idx+1}.</strong> ${q.text}</p><input type="text" class="hand-input" id="hand_input_${chNum}_${idx}" placeholder="Enter answer"><div class="feedback" id="hand_fb_${chNum}_${idx}"></div></div>`;
+        }).join('');
+        return `<div id="panel-${chNum}" class="panel"><div class="summary-card"><h3>📘 Chapter ${chNum}: ${data.title}</h3><p>${data.summary}</p></div><div class="quiz-section"><div class="quiz-header"><h3>✍️ Quiz (10 MC + 5 Hand Calc)</h3><button class="submit-quiz" data-ch="${chNum}">✅ Check Answers</button><button class="reset-quiz" data-ch="${chNum}">⟳ Reset</button></div><div id="quiz-container-${chNum}">${mcHtml}<hr><div class="hand-section-title">📐 Real-World Hand Calculation Questions</div>${handHtml}</div><div class="score-area" id="score-${chNum}"></div></div></div>`;
     }
     
     const container = document.getElementById('panels-container');
@@ -418,35 +512,55 @@
         const resetBtn = document.querySelector(`.reset-quiz[data-ch="${chNum}"]`);
         if(!submitBtn) return;
         const scoreDiv = document.getElementById(`score-${chNum}`);
-        const questionsDivs = document.querySelectorAll(`#quiz-container-${chNum} .question`);
+        const mcDivs = document.querySelectorAll(`#quiz-container-${chNum} .question[data-type="mc"]`);
+        const handDivs = document.querySelectorAll(`#quiz-container-${chNum} .question[data-type="hand"]`);
+        const totalQuestions = mcDivs.length + handDivs.length;
+        
         submitBtn.onclick = () => {
             let correctCount = 0;
-            questionsDivs.forEach((qDiv, idx) => {
+            mcDivs.forEach((qDiv, idx) => {
                 const correctIdx = parseInt(qDiv.dataset.correct);
                 const selected = qDiv.querySelector('input[type="radio"]:checked');
-                const fbSpan = document.getElementById(`fb_${chNum}_${idx}`);
-                if(selected) {
-                    if(parseInt(selected.value) === correctIdx) {
-                        fbSpan.innerHTML = '✅ Correct.';
-                        fbSpan.className = 'feedback correct-fb';
-                        correctCount++;
-                    } else {
-                        fbSpan.innerHTML = `❌ Incorrect. Correct answer: ${chaptersData[chNum].quiz[idx].options[correctIdx]}`;
-                        fbSpan.className = 'feedback wrong-fb';
-                    }
+                const fbSpan = document.getElementById(`mc_fb_${chNum}_${idx}`);
+                if(selected && parseInt(selected.value) === correctIdx) {
+                    fbSpan.innerHTML = '✅ Correct.'; fbSpan.className = 'feedback correct-fb'; correctCount++;
+                } else if(selected) {
+                    const correctAnswer = chaptersData[chNum].mc[idx].options[correctIdx];
+                    fbSpan.innerHTML = `❌ Incorrect. Correct: ${correctAnswer}`; fbSpan.className = 'feedback wrong-fb';
                 } else {
-                    fbSpan.innerHTML = '⚠️ No answer selected.';
-                    fbSpan.className = 'feedback wrong-fb';
+                    fbSpan.innerHTML = '⚠️ No answer selected.'; fbSpan.className = 'feedback wrong-fb';
                 }
             });
-            scoreDiv.innerHTML = `📊 Score: ${correctCount} / ${questionsDivs.length}`;
+            handDivs.forEach((qDiv, idx) => {
+                const correctAnswer = qDiv.dataset.correct;
+                const tolerance = parseFloat(qDiv.dataset.tolerance);
+                const userInput = document.getElementById(`hand_input_${chNum}_${idx}`).value.trim();
+                const fbSpan = document.getElementById(`hand_fb_${chNum}_${idx}`);
+                if(userInput === "") { fbSpan.innerHTML = '⚠️ Please enter an answer.'; fbSpan.className = 'feedback wrong-fb';
+                } else {
+                    let isCorrect = false;
+                    if(!isNaN(parseFloat(correctAnswer)) && !isNaN(parseFloat(userInput))) {
+                        isCorrect = Math.abs(parseFloat(userInput) - parseFloat(correctAnswer)) <= tolerance;
+                    } else {
+                        const userLower = userInput.toLowerCase().trim();
+                        const correctLower = correctAnswer.toLowerCase().trim();
+                        if(userLower.includes('/') && correctLower.includes('/')) {
+                            const userFrac = eval(userLower);
+                            const correctFrac = eval(correctLower);
+                            isCorrect = Math.abs(userFrac - correctFrac) <= 0.001;
+                        } else {
+                            isCorrect = (userLower === correctLower);
+                        }
+                    }
+                    if(isCorrect) { fbSpan.innerHTML = '✅ Correct!'; fbSpan.className = 'feedback correct-fb'; correctCount++; }
+                    else { fbSpan.innerHTML = `❌ Incorrect. Expected: ${correctAnswer}`; fbSpan.className = 'feedback wrong-fb'; }
+                }
+            });
+            scoreDiv.innerHTML = `📊 Score: ${correctCount} / ${totalQuestions}`;
         };
         resetBtn.onclick = () => {
-            questionsDivs.forEach((qDiv, idx) => {
-                qDiv.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
-                const fbSpan = document.getElementById(`fb_${chNum}_${idx}`);
-                if(fbSpan) { fbSpan.innerHTML = ''; fbSpan.className = 'feedback'; }
-            });
+            mcDivs.forEach((qDiv, idx) => { qDiv.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false); document.getElementById(`mc_fb_${chNum}_${idx}`).innerHTML = ''; });
+            handDivs.forEach((qDiv, idx) => { document.getElementById(`hand_input_${chNum}_${idx}`).value = ''; document.getElementById(`hand_fb_${chNum}_${idx}`).innerHTML = ''; });
             if(scoreDiv) scoreDiv.innerHTML = '';
         };
     });
